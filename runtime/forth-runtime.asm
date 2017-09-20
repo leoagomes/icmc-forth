@@ -3,8 +3,12 @@ jmp main
 ; R7 -- DSP
 ; R6 -- RSP
 
-var FT_DATA_STACK_BEGIN: var #128
-var FT_RETURN_STACK_BEGIN: var #128
+FT_DATA_STACK_BEGIN: var #128
+FT_RETURN_STACK_BEGIN: var #128
+
+FT_CONSOLE_CURSOR_POS: var #1
+FT_NUMSTR_BUFFER: var #5
+FT_NUMSTR_BUFFER_END: var #1
 
 ; r0: address to call
 ft_exec:
@@ -13,9 +17,9 @@ ft_exec:
 	inc r1
 	storei r1, r0
 ft_callstb:
-	call ft_callstb.emptyret
+	call ft_callstb_emptyret
 	pop r1
-ft_callstb.emptyret:
+ft_callstb_emptyret:
 	rts
 
 ; r0: address to jump to
@@ -25,8 +29,8 @@ ft_branch:
 	inc r1
 	storei r1, r0
 ft_jmpstb:
-	jmp ft_jmpstb.justafter
-ft_jmpstb.justafter:
+	jmp ft_jmpstb_justafter
+ft_jmpstb_justafter:
 	pop r1
 	rts
 
@@ -103,6 +107,38 @@ ft_ds_rot:
 	pop r0
 	rts
 
+; ( a b -- a b a )
+ft_ds_over:
+	push r0
+	push r1
+	mov r1, r7
+	dec r1
+	dec r1
+	loadi r0, r1
+	call ft_ds_push
+	pop r1
+	pop r0
+	rts
+
+; ( a b -- b )
+ft_ds_nip:
+	push r0
+	push r1
+	dec r7
+	mov r1, r7
+	loadi r0, r1
+	dec r1
+	storei r1, r0
+	pop r1
+	pop r0
+	rts
+
+; ( a b -- b a b )
+ft_ds_tuck:
+	call ft_ds_swap
+	call ft_ds_over
+	rts
+
 ; r0 -- data to push
 ft_rs_push:
 	storei r6, r0
@@ -113,6 +149,34 @@ ft_rs_push:
 ft_rs_pop:
 	dec r6
 	loadi r0, r6
+	rts
+
+; ( a -- ) { -- a }
+ft_rs_ds2rs:
+	push r0
+	call ft_ds_pop
+	call ft_rs_push
+	pop r0
+	rts
+
+; ( -- a ) { a -- }
+ft_rs_rs2ds:
+	push r0
+	call ft_rs_pop
+	call ft_ds_push
+	pop r0
+	rts
+
+; ( -- a ) { a -- a }
+ft_rs_rscpy:
+	push r0
+	push r1
+	mov r1, r6
+	dec r1
+	loadi r0, r1
+	call ft_ds_push
+	pop r1
+	pop r0
 	rts
 
 ; ( address -- x )
@@ -143,14 +207,14 @@ ft_zbranch:
 	push r2
 	push r3
 	mov r3, r0
-	loadn r2, #0
+	xor r2, r2, r2 ; r2 = 0
 	call ft_ds_pop
 	mov r1, r0
 	cmp r1, r2
-	jne ft_zbranch.out
+	jne ft_zbranch_out
 	mov r0, r3
 	call ft_branch
-	ft_zbranch.out:
+	ft_zbranch_out:
 	pop r3
 	pop r2
 	pop r1
@@ -178,7 +242,7 @@ ft_add:
 	pop r0
 	rts
 
-; ( a b -- c ); c = a - b	
+; ( a b -- c ); c = a - b
 ft_sub:
 	push r0
 	push r1
@@ -191,6 +255,7 @@ ft_sub:
 	pop r0
 	rts
 
+; ( a b -- c ); c = a * b
 ft_mul:
 	push r0
 	push r1
@@ -202,7 +267,8 @@ ft_mul:
 	pop r1
 	pop r0
 	rts
-	
+
+; ( a b -- c ); c = a / b
 ft_div:
 	push r0
 	push r1
@@ -211,6 +277,93 @@ ft_div:
 	call ft_ds_pop
 	div r0, r0, r1
 	call ft_ds_push
+	pop r1
+	pop r0
+	rts
+
+; ( a0 ... an n -- a0 ... an a0 )
+ft_pick:
+	push r0
+	push r1
+	call ft_ds_pop
+	mov r1, r7
+	dec r1
+	sub r1, r1, r0
+	loadi r0, r1
+	call ft_ds_push
+	pop r1
+	pop r0
+	rts
+
+; ( a0 ... an n -- a1 ... an a0 )
+ft_roll:
+	push r0
+	push r1
+	push r2
+	push r3
+
+	call ft_ds_pop
+	mov r1, r7
+	dec r1
+	sub r1, r1, r0
+	loadi r3, r1
+	mov r2, r1
+	inc r1
+
+ft_roll_loop:
+	storei r2, r1
+	inc r2
+	inc r1
+	cmp r1, r7
+	jne ft_roll_loop
+
+	dec r1
+	storei r1, r3
+
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+
+; r0 : str
+prim_printstr:
+	push r0
+	push r1
+	push r2
+	push r3
+
+	xor r2, r2, r2
+	load r1, FT_CONSOLE_CURSOR_POS
+
+prim_printstr_loop:
+	loadi r3, r0
+	cmp r3, r2
+	jeq prim_printstr_loop_end
+	outchar r3, r1
+	inc r1
+	inc r0
+	jmp prim_printstr_loop
+
+prim_printstr_loop_end:
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+
+; r0 = no
+prim_printno:
+	push r0
+	push r1
+	push r2
+	push r3
+
+	loadn r1, #FT_NUMSTR_BUFFER
+	loadn r2, #FT_NUMSTR_BUFFER_END
+
+	pop r3
+	pop r2
 	pop r1
 	pop r0
 	rts
