@@ -22,16 +22,27 @@ FT_DICT_BUFFER: var #4096
 FT_LOOP_ITER_I: var #1
 FT_LOOP_ITER_J: var #1
 
+FT_LOOPA_INDEX: var #1
+FT_LOOPB_INDEX: var #1
+
 ; r0: address to call
-ft_exec:
+prim_exec:
 	push r1
 	loadn r1, #ft_callstb
 	inc r1
 	storei r1, r0
-ft_callstb:
-	call ft_callstb_emptyret
+prim_callstb:
+	call prim_callstb_emptyret
 	pop r1
-ft_callstb_emptyret:
+prim_callstb_emptyret:
+	rts
+
+; ( a -- ) ; execs code at address a
+ft_exec:
+	push r0
+	call ft_ds_pop
+	call prim_exec
+	pop r0
 	rts
 
 ; r0: address to jump to
