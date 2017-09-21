@@ -7,8 +7,9 @@ FT_DATA_STACK_BEGIN: var #128
 FT_RETURN_STACK_BEGIN: var #128
 
 FT_CONSOLE_CURSOR_POS: var #1
+
 FT_NUMSTR_BUFFER: var #5
-FT_NUMSTR_BUFFER_END: var #1
+FT_NUMSTR_BUFFER_END: var #2
 
 ; r0: address to call
 ft_exec:
@@ -358,13 +359,78 @@ prim_printno:
 	push r1
 	push r2
 	push r3
+	push r4
+	push r5
+	push r6
 
+	loadn r6, #'0'
+	xor r5, r5, r5
+	loadn r3, #10
 	loadn r1, #FT_NUMSTR_BUFFER
 	loadn r2, #FT_NUMSTR_BUFFER_END
 
+prim_printno_loop:
+	mod r4, r0, r3
+	add r4, r4, r6
+	storei r2, r4
+	dec r2
+	div r4, r0, r3
+	cmp r4, r5
+	jne prim_printno_loop
+	
+	loadn r0, #FT_NUMSTR_BUFFER
+prim_printno_fsl:
+	loadi r1, r0
+	cmp r1, r6
+	jne prim_printno_fsl_end
+	inc r0
+	jmp prim_printno_fsl
+
+prim_printno_fsl_end:
+	call prim_printstr
+
+	pop r6
+	pop r5
+	pop r4
 	pop r3
 	pop r2
 	pop r1
+	pop r0
+	rts
+
+ft_print_stack:
+	push r0
+	push r1
+	push r2
+	push r3
+
+	mov r1, r7
+	loadn r2, #FT_DATA_STACK_BEGIN
+
+	cmp r1, r2
+	jeq ft_print_stack_e
+	
+ft_print_stack_popl:
+	dec r1
+	loadi r0, r1
+	call prim_printno
+	load r3, FT_CONSOLE_CURSOR_POS
+	inc r3
+	store FT_CONSOLE_CURSOR_POS, r3
+	cmp r1, r2
+	jne ft_print_stack_popl
+
+ft_print_stack_e:
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+	
+ft_print_str_top_as_str:
+	push r0
+	call ft_ds_pop
+	call prim_printstr
 	pop r0
 	rts
 
