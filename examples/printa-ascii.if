@@ -1,0 +1,8 @@
+\ @entry main
+
+: main
+	128 0 do
+		i emit
+	loop ;
+
+\ vim: syntax=forth

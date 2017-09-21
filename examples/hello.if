@@ -1,0 +1,6 @@
+\ @entry hello
+
+: hello
+	" hello world " .str ;
+
+\ vi: syntax=forth
