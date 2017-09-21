@@ -1,3 +1,4 @@
+; vi: syntax=icmc
 jmp main
 
 ; R7 -- DSP
@@ -7,6 +8,7 @@ FT_DATA_STACK_BEGIN: var #128
 FT_RETURN_STACK_BEGIN: var #128
 
 FT_CONSOLE_CURSOR_POS: var #1
+FT_CONSOLE_COLOR: var #1
 
 FT_NUMSTR_BUFFER: var #5
 FT_NUMSTR_BUFFER_END: var #2
@@ -335,7 +337,9 @@ prim_printstr:
 	push r1
 	push r2
 	push r3
+	push r4
 
+	load r4, FT_CONSOLE_COLOR
 	xor r2, r2, r2
 	load r1, FT_CONSOLE_CURSOR_POS
 
@@ -343,12 +347,14 @@ prim_printstr_loop:
 	loadi r3, r0
 	cmp r3, r2
 	jeq prim_printstr_loop_end
+	add r3, r3, r4             ; add color to char
 	outchar r3, r1
 	inc r1
 	inc r0
 	jmp prim_printstr_loop
 
 prim_printstr_loop_end:
+	pop r4
 	pop r3
 	pop r2
 	pop r1
@@ -400,6 +406,7 @@ prim_printno_fsl_end:
 	pop r0
 	rts
 
+; prints the stack
 ft_print_stack:
 	push r0
 	push r1
@@ -428,7 +435,8 @@ ft_print_stack_e:
 	pop r1
 	pop r0
 	rts
-	
+
+; ( addrs -- )
 ft_print_str_top_as_str:
 	push r0
 	call ft_ds_pop
@@ -474,6 +482,20 @@ ft_read_keyboard_key:
 	push r0
 	inchar r0
 	call ft_ds_push
+	pop r0
+	rts
+
+; ( a -- )
+ft_emit:
+	push r0
+	push r1
+	push r2
+	call ft_ds_pop
+	load r2, FT_CONSOLE_COLOR
+	load r1, FT_CONSOLE_CURSOR_POS
+	outchar r0, r1
+	pop r2
+	pop r1
 	pop r0
 	rts
 
