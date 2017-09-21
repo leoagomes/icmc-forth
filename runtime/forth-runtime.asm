@@ -469,6 +469,14 @@ ft_read_keyboard_till_rl:
 	pop r0
 	rts
 
+; ( -- a )
+ft_read_keyboard_key:
+	push r0
+	inchar r0
+	call ft_ds_push
+	pop r0
+	rts
+
 ft_setup:
 	loadn r7, #FT_DATA_STACK_BEGIN
 	loadn r6, #FT_RETURN_STACK_BEGIN
