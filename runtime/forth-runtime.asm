@@ -15,6 +15,13 @@ FT_NUMSTR_BUFFER_END: var #2
 
 FT_KBD_BUFFER: var #512
 
+; should I use a dictionary?
+FT_DICT_BUFFER: var #4096
+
+; should iteration counters be actual variables vs put in the dict?
+FT_LOOP_ITER_I: var #1
+FT_LOOP_ITER_J: var #1
+
 ; r0: address to call
 ft_exec:
 	push r1
