@@ -9,12 +9,16 @@ class Lexer(inputFile: String) {
 
     var lastToken : String = ""
     var currentCodePoint : Int = 0
-    var line : Int = 0
+    var line : Int = 1
     var col : Int = 0
     var codePointsRead : Int = 0
 
     val isTerminated : Boolean
         get() = currentCodePoint == -1
+
+    init {
+        consume()
+    }
 
     fun consume() {
         currentCodePoint = reader.read()
@@ -33,7 +37,7 @@ class Lexer(inputFile: String) {
 
     fun match(cp: Int) {
         if (currentCodePoint != cp)
-            abort("Expected ${Character.toChars(cp)}. (last token: $lastToken)")
+            abort("Expected ${String(Character.toChars(cp))}, got ${String(Character.toChars(currentCodePoint))}.")
     }
 
     fun match(char: Char) = match(char.toInt())
@@ -46,6 +50,7 @@ class Lexer(inputFile: String) {
     fun advance(until: Int) {
         while (currentCodePoint != until && !isTerminated)
             consume()
+        consume()
     }
 
     fun advance(until: Char) = advance(until.toInt())
@@ -74,9 +79,14 @@ class Lexer(inputFile: String) {
             abort("Expected digit, got '${String(Character.toChars(currentCodePoint))}'.")
 
         value = if (currentCodePoint.toChar() == '0') {
-            consumeAbortOnEnd("'x'")
-            match('x')
-            readHexInteger()
+            consume()
+
+            if (isTerminated || Character.isWhitespace(currentCodePoint))
+                0
+            else {
+                match('x')
+                readHexInteger()
+            }
         } else {
             readInteger()
         }
@@ -99,6 +109,9 @@ class Lexer(inputFile: String) {
             consumeAbortOnEnd("character")
         }
 
+        match('"')
+        consume()
+
         return str
     }
 
@@ -119,7 +132,6 @@ class Lexer(inputFile: String) {
 
         match('"')
         val value = readString()
-        match('"')
 
         return StringLiteralToken(value, cline, ccol)
     }
@@ -188,25 +200,24 @@ class Lexer(inputFile: String) {
                 return value.toChar()
             }
             Character.toLowerCase(currentCodePoint).toChar() == 'x' -> {
+                consumeAbortOnEnd("digit")
                 var value = readHexInteger()
                 return value.toChar()
             }
             Character.toLowerCase(currentCodePoint).toChar() == 'n' -> {
-                consumeAbortOnEnd("'")
                 return '\n'
             }
             currentCodePoint.toChar() == '"' -> {
-                consumeAbortOnEnd("'")
                 return '\"'
             }
             currentCodePoint.toChar() == '\\' -> {
-                consumeAbortOnEnd("'")
                 return '\\'
             }
             else -> {
                 abort("Unrecognized escape '\\${String(Character.toChars(currentCodePoint))}'.")
             }
         }
+        return '?'
     }
 
     fun readCharLiteral() : CharLiteralToken {
@@ -219,9 +230,9 @@ class Lexer(inputFile: String) {
 
         consumeAbortOnEnd()
 
-        when (currentCodePoint.toChar()) {
-            '\\' -> value = readEscapedCharValue()
-            in Integer(0).toChar() .. Integer(128).toChar() -> value = currentCodePoint.toChar()
+        when {
+            currentCodePoint.toChar() == '\\' -> value = readEscapedCharValue()
+            currentCodePoint in 0 .. 127 -> value = currentCodePoint.toChar()
             else ->
                     abort("Unrecognized character literal '${String(Character.toChars(currentCodePoint))}'.")
         }

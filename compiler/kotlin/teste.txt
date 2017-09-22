@@ -1,1 +1,7 @@
-olá este é um documento de testesub
+( vim: syntax=forth )
+
+\ olá este é um comentário
+variable var
+
+: test
+	10 0 1 . do leave loop "mystr" 'a' '\n' '\x41' ;
