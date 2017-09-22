@@ -155,10 +155,10 @@ class Lexer(inputFile: String) {
         }
     }
 
-    fun consumeAbortOnEnd(what: String = "something") {
+    fun consumeAbortOnEnd(expected: String = "something") {
         consume()
         if (currentCodePoint == -1)
-            abort("Expected $what, got end of file.")
+            abort("Expected $expected, got end of file.")
     }
 
     private fun readInteger() : Int {
@@ -205,12 +205,15 @@ class Lexer(inputFile: String) {
                 return value.toChar()
             }
             Character.toLowerCase(currentCodePoint).toChar() == 'n' -> {
+                consume()
                 return '\n'
             }
             currentCodePoint.toChar() == '"' -> {
+                consume()
                 return '\"'
             }
             currentCodePoint.toChar() == '\\' -> {
+                consume()
                 return '\\'
             }
             else -> {
@@ -232,13 +235,16 @@ class Lexer(inputFile: String) {
 
         when {
             currentCodePoint.toChar() == '\\' -> value = readEscapedCharValue()
-            currentCodePoint in 0 .. 127 -> value = currentCodePoint.toChar()
+            currentCodePoint in 0 .. 127 -> {
+                value = currentCodePoint.toChar()
+                consumeAbortOnEnd("'")
+            }
             else ->
                     abort("Unrecognized character literal '${String(Character.toChars(currentCodePoint))}'.")
         }
 
-        consumeAbortOnEnd("'")
         match('\'')
+        consume()
 
         return CharLiteralToken(value, cline, ccol)
     }
