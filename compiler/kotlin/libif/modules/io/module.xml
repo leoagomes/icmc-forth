@@ -69,5 +69,23 @@
                 <dep module="primitives" name="FT_CONSOLE_COLOR" type="variable"/>
             </deps>
         </symbol>
+        <symbol type="function">
+            <name>ft_cr</name>
+            <word>cr</word>
+            <snippet src="ft_cr.s"/>
+            <deps>
+                <dep module="primitives" name="prim_cr" type="function"/>
+                <dep module="primitives" name="prim_clearline" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_page</name>
+            <word>page</word>
+            <snippet src="ft_page.s"/>
+            <deps>
+                <dep module="primitives" name="prim_clearscreen" type="function"/>
+                <dep module="primitives" name="prim_resetcursor" type="function"/>
+            </deps>
+        </symbol>
     </symbols>
 </module>

@@ -6,7 +6,7 @@
     <symbols>
         <symbol type="variable">
             <name>FT_CONSOLE_CURSOR_POS</name>
-            <word>%console_cursor%</word>
+            <word>%console_cursor_pos%</word>
             <vars>
                 <var name="FT_CONSOLE_CURSOR_POS" size="1"/>
             </vars>
@@ -23,6 +23,10 @@
             <name>prim_printstr</name>
             <word>$printstr$</word>
             <snippet src="prim_printstr.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+                <dep module="primitives" name="FT_CONSOLE_COLOR" type="variable"/>
+            </deps>
         </symbol>
         <symbol type="function" use="pure">
             <name>prim_printno</name>
@@ -32,6 +36,35 @@
                 <var name="FT_NUMSTR_BUFFER" size="5" declare="no"/>
                 <var name="FT_NUMSTR_BUFFER_END" size="2" declare="no"/>
             </vars>
+        </symbol>
+        <symbol type="function">
+            <name>prim_clearline</name>
+            <word>$clearline$</word>
+            <snippet src="prim_clearline.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>prim_clearscreen</name>
+            <word>$clearscreen$</word>
+            <snippet src="prim_clearscreen.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>prim_cr</name>
+            <word>$cr$</word>
+            <snippet src="prim_cr.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>prim_resetcursor</name>
+            <word>$resetcursor$</word>
+            <snippet src="prim_resetcursor.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
         </symbol>
     </symbols>
 </module>
