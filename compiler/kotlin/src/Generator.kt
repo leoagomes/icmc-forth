@@ -18,7 +18,16 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             module.symbols.forEach { sym ->
                 dictionary.put(sym.word, { word ->
                     emitter.addRootDependency(module.name, sym.name)
-                    "call ${sym.name}\n"
+
+                    when (sym.type) {
+                        SymbolType.FUNCTION -> "call ${sym.name}\n"
+                        SymbolType.VARIABLE -> {
+                            emitter.addRootDependency("core", "ft_ds_push")
+
+                            "loadn r0, #${sym.name}\n" +
+                                    "call ft_ds_push\n"
+                        }
+                    }
                 })
             }
         }
@@ -73,8 +82,8 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         })
 
         dictionary.put("do", { _ ->
-            val currentLevel = decisionContext.peek() + 1
-            decisionContext.push(currentLevel)
+            val currentLevel = loopContext.peek() + 1
+            loopContext.push(currentLevel)
             val levelString = "${functionName}_loop${currentLevel}"
 
             emitter.addRootDependency("core", "ft_ds_swap")
@@ -87,7 +96,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                      "${levelString}_begin:\n"
         })
         dictionary.put("leave", { _ ->
-            val currentLevel = decisionContext.pop()
+            val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("No loop to leave.")
@@ -97,7 +106,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             "jmp ${levelString}_leave\n"
         })
         dictionary.put("loop", { _ ->
-            val currentLevel = decisionContext.pop()
+            val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("Not 'do'ing anything. (Can't loop from nothing)")
@@ -125,7 +134,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "dec r6\n"
         })
         dictionary.put("+loop", { _ ->
-            val currentLevel = decisionContext.pop()
+            val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("Not 'do'ing anything. (Can't +loop from nothing)")
@@ -157,14 +166,14 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         })
 
         dictionary.put("begin", { _ ->
-            val currentLevel = decisionContext.peek() + 1
-            decisionContext.push(currentLevel)
+            val currentLevel = loopContext.peek() + 1
+            loopContext.push(currentLevel)
             val levelString = "${functionName}_loop${currentLevel}"
 
             "${levelString}_begin:\n"
         })
         dictionary.put("until", { _ ->
-            val currentLevel = decisionContext.pop()
+            val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'until'.")
@@ -182,7 +191,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "jeq ${levelString}_begin\n"
         })
         dictionary.put("while", { _ ->
-            val currentLevel = decisionContext.peek()
+            val currentLevel = loopContext.peek()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'while'.")
@@ -200,7 +209,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "jeq ${levelString}_leave\n"
         })
         dictionary.put("repeat", { _ ->
-            val currentLevel = decisionContext.pop()
+            val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'repeat'.")
@@ -211,6 +220,8 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "jmp ${levelString}_begin\n" +
                     "${levelString}_leave:\n"
         })
+
+        // TODO: add iterators
     }
 
     private fun abort(reason: String) {
