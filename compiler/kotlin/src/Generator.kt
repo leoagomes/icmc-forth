@@ -88,27 +88,128 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         })
         dictionary.put("leave", { _ ->
             val currentLevel = decisionContext.pop()
+
+            if (currentLevel == -1)
+                abort("No loop to leave.")
+
             val levelString = "${functionName}_loop${currentLevel}"
 
-
+            "jmp ${levelString}_leave\n"
         })
         dictionary.put("loop", { _ ->
             val currentLevel = decisionContext.pop()
+
+            if (currentLevel == -1)
+                abort("Not 'do'ing anything. (Can't loop from nothing)")
+
             val levelString = "${functionName}_loop${currentLevel}"
+
+            emitter.addRootDependency("core", "ft_rs_pop")
+            emitter.addRootDependency("core", "ft_rs_push")
 
             "${levelString}_ploop:\n" +
                     "call ft_rs_pop\n" +
                     "inc r0\n" +
                     "push r1\n" +
-                    "mov r1, r0\n" +
-                    "call ft_rs_pop\n" +
-                    "cmp r1, r0\n" +
+                    "mov r1, r6\n" +
+                    "dec r1\n" +
+                    "loadi r1, r1\n" +
+                    "cmp r0, r1\n" +
+                    "push fr\n" +
                     "call ft_rs_push\n" +
-                    "mov r0, r1\n" +
-                    "call ft_rs_pop" +
+                    "pop fr\n" +
                     "pop r1\n" +
-                    "jeg ${levelString}_leave\n" +
-                    ""
+                    "jle ${levelString}_begin\n" +
+                    "${levelString}_leave:\n" +
+                    "dec r6\n" +
+                    "dec r6\n"
+        })
+        dictionary.put("+loop", { _ ->
+            val currentLevel = decisionContext.pop()
+
+            if (currentLevel == -1)
+                abort("Not 'do'ing anything. (Can't +loop from nothing)")
+
+            val levelString = "${functionName}_loop${currentLevel}"
+
+            emitter.addRootDependency("core", "ft_ds_pop")
+            emitter.addRootDependency("core", "ft_rs_pop")
+            emitter.addRootDependency("core", "ft_rs_push")
+
+            "${levelString}_ploop:\n" +
+                    "call ft_rs_pop\n" +
+                    "push r1\n" +
+                    "mov r1, r0\n" +
+                    "call ft_ds_pop\n" +
+                    "add r0, r0, r1\n" +
+                    "mov r1, r6\n" +
+                    "dec r1\n" +
+                    "loadi r1, r1\n" +
+                    "cmp r0, r1\n" +
+                    "push fr\n" +
+                    "call ft_rs_push\n" +
+                    "pop fr\n" +
+                    "pop r1\n" +
+                    "jle ${levelString}_begin\n" +
+                    "${levelString}_leave:\n" +
+                    "call ft_rs_pop\n" +
+                    "call ft_rs_pop\n"
+        })
+
+        dictionary.put("begin", { _ ->
+            val currentLevel = decisionContext.peek() + 1
+            decisionContext.push(currentLevel)
+            val levelString = "${functionName}_loop${currentLevel}"
+
+            "${levelString}_begin:\n"
+        })
+        dictionary.put("until", { _ ->
+            val currentLevel = decisionContext.pop()
+
+            if (currentLevel == -1)
+                abort("No 'begin' matching your 'until'.")
+
+            val levelString = "${functionName}_loop${currentLevel}"
+
+            emitter.addRootDependency("core", "ft_ds_pop")
+
+            "${levelString}_puntil:\n" +
+                    "call ft_ds_pop\n" +
+                    "push r1\n" +
+                    "xor r1, r1, r1\n" +
+                    "cmp r0, r1\n" +
+                    "pop r1\n" +
+                    "jeq ${levelString}_begin\n"
+        })
+        dictionary.put("while", { _ ->
+            val currentLevel = decisionContext.peek()
+
+            if (currentLevel == -1)
+                abort("No 'begin' matching your 'while'.")
+
+            val levelString = "${functionName}_loop${currentLevel}"
+
+            emitter.addRootDependency("core", "ft_ds_pop")
+
+            "${levelString}_pwhile:\n" +
+                    "call ft_ds_pop\n" +
+                    "push r1\n" +
+                    "xor r1, r1, r1\n" +
+                    "cmp r0, r1\n" +
+                    "pop r1\n" +
+                    "jeq ${levelString}_leave\n"
+        })
+        dictionary.put("repeat", { _ ->
+            val currentLevel = decisionContext.pop()
+
+            if (currentLevel == -1)
+                abort("No 'begin' matching your 'repeat'.")
+
+            val levelString = "${functionName}_loop${currentLevel}"
+
+            "${levelString}_prepeat:\n" +
+                    "jmp ${levelString}_begin\n" +
+                    "${levelString}_leave:\n"
         })
     }
 
