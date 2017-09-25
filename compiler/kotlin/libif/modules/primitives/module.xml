@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<module>
+    <name>primitives</name>
+
+    <symbols>
+        <symbol type="variable">
+            <name>FT_CONSOLE_CURSOR_POS</name>
+            <word>%console_cursor%</word>
+            <vars>
+                <var name="FT_CONSOLE_CURSOR_POS" size="1"/>
+            </vars>
+        </symbol>
+        <symbol type="variable">
+            <name>FT_CONSOLE_COLOR</name>
+            <word>%console_color%</word>
+            <vars>
+                <var name="FT_CONSOLE_COLOR" size="1"/>
+            </vars>
+        </symbol>
+
+        <symbol type="function" use="pure">
+            <name>prim_printstr</name>
+            <word>$printstr$</word>
+            <snippet src="prim_printstr.s"/>
+        </symbol>
+        <symbol type="function" use="pure">
+            <name>prim_printno</name>
+            <word>$printno$</word>
+            <snippet src="prim_printno.s"/>
+            <vars>
+                <var name="FT_NUMSTR_BUFFER" size="5" declare="no"/>
+                <var name="FT_NUMSTR_BUFFER_END" size="2" declare="no"/>
+            </vars>
+        </symbol>
+    </symbols>
+</module>

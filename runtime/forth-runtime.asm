@@ -424,6 +424,7 @@ prim_printno_fsl_end:
 	pop r0
 	rts
 
+
 ; prints the stack
 ft_print_stack:
 	push r0
@@ -455,7 +456,7 @@ ft_print_stack_e:
 	rts
 
 ; ( addrs -- )
-ft_print_str_top_as_str:
+ft_print_top_as_str:
 	push r0
 	call ft_ds_pop
 	call prim_printstr
@@ -463,7 +464,7 @@ ft_print_str_top_as_str:
 	rts
 
 ; ( char -- straddr)
-ft_read_keyboard_till:
+ft_read_keys_til:
 	push r0
 	push r1
 	push r2
@@ -475,14 +476,14 @@ ft_read_keyboard_till:
 	loadn r2, #512
 	xor r3, r3, r3
 
-ft_read_keyboard_till_rl:
+ft_read_keys_til_rl:
 	inchar r4
 	cmp r4, r3
-	jeq ft_read_keyboard_till_rl
+	jeq ft_read_keys_til_rl
 	storei r1, r4
 	inc r1
 	cmp r0, r4
-	jne ft_read_keyboard_till_rl
+	jne ft_read_keys_til_rl
 
 	storei r1, r3
 	loadn r0, #FT_KBD_BUFFER

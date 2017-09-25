@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<module>
+    <name>core</name>
+
+    <symbols>
+        <symbol type="variable">
+            <name>FT_DATA_STACK_BEGIN</name>
+            <word>%data_stack_begin%</word>
+            <vars>
+                <var name="FT_DATA_STACK_BEGIN" size="256"/>
+            </vars>
+        </symbol>
+        <symbol type="variable">
+            <name>FT_RETURN_STACK_BEGIN</name>
+            <word>%return_stack_begin%</word>
+            <vars>
+                <var name="FT_RETURN_STACK_BEGIN" size="256"/>
+            </vars>
+        </symbol>
+
+        <symbol type="function">
+            <name>ft_ds_push</name>
+            <word use="no"/>
+            <snippet src="ft_ds_push.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_pop</name>
+            <word use="no"/>
+            <snippet src="ft_ds_pop.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_drop</name>
+            <word>drop</word>
+            <snippet src="ft_ds_drop.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_dup</name>
+            <word>dup</word>
+            <snippet src="ft_ds_dup.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_swap</name>
+            <word>swap</word>
+            <snippet src="ft_ds_swap.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_rot</name>
+            <word>rot</word>
+            <snippet src="ft_ds_rot.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_over</name>
+            <word>over</word>
+            <snippet src="ft_ds_over.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_nip</name>
+            <word>nip</word>
+            <snippet src="ft_ds_nip.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_ds_tuck</name>
+            <word>tuck</word>
+            <snippet src="ft_ds_tuck.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_swap" type="function"/>
+                <dep module="core" name="ft_ds_over" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_rs_push</name>
+            <word use="no"/>
+            <snippet src="ft_rs_push.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_rs_pop</name>
+            <word use="no"/>
+            <snippet src="ft_rs_pop.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>ft_rs_ds2rs</name>
+            <word>>r</word>
+            <snippet src="ft_rs_ds2rs.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_rs_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_rs_rs2ds</name>
+            <word>r></word>
+            <snippet src="ft_rs_rs2ds.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_rs_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_rs_rscpy</name>
+            <word>r@</word>
+            <snippet src="ft_rs_rscpy.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_peek</name>
+            <word>@</word>
+            <snippet src="ft_peek.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_poke</name>
+            <word>!</word>
+            <snippet src="ft_poke.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_pick</name>
+            <word>pick</word>
+            <snippet src="ft_pick.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_roll</name>
+            <word>pick</word>
+            <snippet src="ft_roll.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+
+        <symbol type="function">
+            <name>ft_setup</name>
+            <word>$reset$</word>
+            <snippet src="ft_setup.s"/>
+            <deps>
+                <dep module="core" name="FT_DATA_STACK_BEGIN" type="variable"/>
+                <dep module="core" name="FT_RETURN_STACK_BEGIN" type="variable"/>
+            </deps>
+        </symbol>
+    </symbols>
+</module>

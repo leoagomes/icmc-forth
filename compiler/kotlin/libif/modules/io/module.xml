@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<module>
+    <name>io</name>
+
+    <symbols>
+        <symbol type="variable">
+            <name>FT_KBD_BUFFER</name>
+            <word>%io_keyboard_buffer%</word>
+            <vars>
+                <var name="FT_KBD_BUFFER" size="512"/>
+            </vars>
+        </symbol>
+
+        <symbol type="function">
+            <name>ft_print_stack</name>
+            <word>.s</word>
+            <snippet src="ft_print_stack.s"/>
+            <deps>
+                <dep module="core" name="FT_DATA_STACK_BEGIN" type="variable"/>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+                <dep module="primitives" name="prim_printno" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_print_top_as_str</name>
+            <word>stype</word>
+            <snippet src="ft_print_top_as_str.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="primitives" name="prim_printstr" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_read_keys_til</name>
+            <word>read-keys</word>
+            <snippet src="ft_read_keys_til.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="io" name="FT_KBD_BUFFER" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_read_keyboard_key</name>
+            <word>key</word>
+            <snippet src="ft_read_keyboard_key.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_emit</name>
+            <word>emit</word>
+            <snippet src="ft_emit.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="primitives" name="FT_CONSOLE_COLOR" type="variable"/>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_type</name>
+            <word>type</word>
+            <snippet src="ft_type.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+                <dep module="primitives" name="FT_CONSOLE_COLOR" type="variable"/>
+            </deps>
+        </symbol>
+    </symbols>
+</module>

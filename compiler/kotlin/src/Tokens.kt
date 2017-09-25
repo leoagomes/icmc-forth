@@ -1,6 +1,6 @@
 
 enum class TokenType{
-    WORD, NUMBER, STRING, CHARACTER
+    WORD, NUMBER, STRING, CHARACTER, END, COLON, SEMICOLON
 }
 
 abstract class Token(val typeName: String, val type: TokenType, val line: Int, val col: Int) {
@@ -22,4 +22,17 @@ class StringLiteralToken(val value: String, line: Int, col: Int) : Token("string
 
 class CharLiteralToken(val value: Char, line: Int, col: Int) : Token("character-literal", TokenType.CHARACTER, line, col) {
     override fun valueToString(): String = "$value"
+}
+
+class TheEndToken(line: Int, col: Int) : Token("the-end", TokenType.END, line, col) {
+    override fun valueToString(): String = "<the end>"
+    override fun toString(): String = "EndToken(line: $line, col: $col)"
+}
+
+class ColonToken(line: Int, col: Int) : Token("colon", TokenType.COLON, line, col) {
+    override fun valueToString(): String = ":"
+}
+
+class SemiColonToken(line: Int, col: Int) : Token("semicolon", TokenType.SEMICOLON, line, col) {
+    override fun valueToString(): String = ";"
 }

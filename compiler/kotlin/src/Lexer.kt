@@ -7,7 +7,6 @@ class Lexer(inputFile: String) {
     private var fileStream : FileInputStream = FileInputStream(inputFile)
     private var reader : InputStreamReader = InputStreamReader(fileStream)
 
-    var lastToken : String = ""
     var currentCodePoint : Int = 0
     var line : Int = 1
     var col : Int = 0
@@ -20,7 +19,7 @@ class Lexer(inputFile: String) {
         consume()
     }
 
-    fun consume() {
+    private fun consume() {
         currentCodePoint = reader.read()
 
         codePointsRead++
@@ -31,31 +30,31 @@ class Lexer(inputFile: String) {
             col++
     }
 
-    fun abort(reason: String) {
+    private fun abort(reason: String) {
         throw LexerAbortedException(reason)
     }
 
-    fun match(cp: Int) {
+    private fun match(cp: Int) {
         if (currentCodePoint != cp)
             abort("Expected ${String(Character.toChars(cp))}, got ${String(Character.toChars(currentCodePoint))}.")
     }
 
-    fun match(char: Char) = match(char.toInt())
+    private fun match(char: Char) = match(char.toInt())
 
-    fun skipSpaces() {
+    private fun skipSpaces() {
         while (Character.isWhitespace(currentCodePoint) && !isTerminated)
             consume()
     }
 
-    fun advance(until: Int) {
+    private fun advance(until: Int) {
         while (currentCodePoint != until && !isTerminated)
             consume()
         consume()
     }
 
-    fun advance(until: Char) = advance(until.toInt())
+    private fun advance(until: Char) = advance(until.toInt())
 
-    fun skipComments() {
+    private fun skipComments() {
         when (currentCodePoint.toChar()) {
             '\\' -> advance('\n')
             '(' -> advance(')')
@@ -63,22 +62,21 @@ class Lexer(inputFile: String) {
         }
     }
 
-    fun skipAll() {
+    private fun skipAll() {
         do {
             skipSpaces()
             skipComments()
         } while (Character.isWhitespace(currentCodePoint) && !isTerminated)
     }
 
-    fun readNumberLiteral() : NumberLiteralToken {
-        var value : Int = 0
-        var cline = line
-        var ccol = col
+    private fun readNumberLiteral() : NumberLiteralToken {
+        val cline = line
+        val ccol = col
 
         if (!Character.isDigit(currentCodePoint))
             abort("Expected digit, got '${String(Character.toChars(currentCodePoint))}'.")
 
-        value = if (currentCodePoint.toChar() == '0') {
+        val value = if (currentCodePoint.toChar() == '0') {
             consume()
 
             if (isTerminated || Character.isWhitespace(currentCodePoint))
@@ -94,17 +92,18 @@ class Lexer(inputFile: String) {
         return NumberLiteralToken(value, cline, ccol)
     }
 
-    fun readString() : String {
+    private fun readString() : String {
         match('"')
 
-        var str : String = ""
+        var str = ""
 
         consumeAbortOnEnd()
         while (currentCodePoint.toChar() != '"') {
-            str += if (currentCodePoint.toChar() == '\\') {
-                readEscapedCharValue()
+            if (currentCodePoint.toChar() == '\\') {
+                str += readEscapedCharValue()
+                continue
             } else {
-                String(Character.toChars(currentCodePoint))
+                str += String(Character.toChars(currentCodePoint))
             }
             consumeAbortOnEnd("character")
         }
@@ -115,7 +114,7 @@ class Lexer(inputFile: String) {
         return str
     }
 
-    fun readWordIdentifier() : String {
+    private fun readWordIdentifier() : String {
         var str = ""
 
         while (!Character.isWhitespace(currentCodePoint) && !isTerminated) {
@@ -126,7 +125,7 @@ class Lexer(inputFile: String) {
         return str
     }
 
-    fun readStringLiteral() : StringLiteralToken {
+    private fun readStringLiteral() : StringLiteralToken {
         val cline = line
         val ccol = col
 
@@ -136,18 +135,23 @@ class Lexer(inputFile: String) {
         return StringLiteralToken(value, cline, ccol)
     }
 
-    fun readWord() : WordToken {
+    private fun readWord() : Token {
         val cline = line
         val ccol = col
         val value = readWordIdentifier()
 
-        return WordToken(value, cline, ccol)
+        return when (value) {
+            ":" -> ColonToken(cline, ccol)
+            ";" -> SemiColonToken(cline, ccol)
+            else -> WordToken(value, cline, ccol)
+        }
     }
 
     fun readToken() : Token {
         skipAll()
 
         return when {
+            currentCodePoint == -1 -> return TheEndToken(line, col)
             Character.isDigit(currentCodePoint) -> readNumberLiteral()
             currentCodePoint.toChar() == '\'' -> readCharLiteral()
             currentCodePoint.toChar() == '"' -> readStringLiteral()
@@ -155,7 +159,7 @@ class Lexer(inputFile: String) {
         }
     }
 
-    fun consumeAbortOnEnd(expected: String = "something") {
+    private fun consumeAbortOnEnd(expected: String = "something") {
         consume()
         if (currentCodePoint == -1)
             abort("Expected $expected, got end of file.")
@@ -196,12 +200,12 @@ class Lexer(inputFile: String) {
 
         when {
             Character.isDigit(currentCodePoint) -> {
-                var value = readInteger()
+                val value = readInteger()
                 return value.toChar()
             }
             Character.toLowerCase(currentCodePoint).toChar() == 'x' -> {
                 consumeAbortOnEnd("digit")
-                var value = readHexInteger()
+                val value = readHexInteger()
                 return value.toChar()
             }
             Character.toLowerCase(currentCodePoint).toChar() == 'n' -> {
@@ -223,13 +227,13 @@ class Lexer(inputFile: String) {
         return '?'
     }
 
-    fun readCharLiteral() : CharLiteralToken {
-        var value : Char = '?'
+    private fun readCharLiteral() : CharLiteralToken {
+        var value = '?'
 
         match('\'')
 
-        var cline = line
-        var ccol = col
+        val cline = line
+        val ccol = col
 
         consumeAbortOnEnd()
 

@@ -1,0 +1,26 @@
+Imprimestr:	
+	push r0	
+	push r1	
+	push r2	
+	push r3	
+	push r4	
+	
+	loadn r3, #'\0'
+
+ImprimestrLoop:	
+	loadi r4, r1
+	cmp r4, r3
+	jeq ImprimestrSai
+	add r4, r2, r4
+	outchar r4, r0
+	inc r0
+	inc r1
+	jmp ImprimestrLoop
+	
+ImprimestrSai:	
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
