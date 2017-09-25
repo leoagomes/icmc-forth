@@ -90,6 +90,7 @@ class LibIF(val directory: String) {
                 .map { depNodes.item(it) }
                 .filter { it.nodeType == Node.ELEMENT_NODE }
                 .map { it as Element }
+                .filter { !(it.hasAttribute("declare") && it.getAttribute("declare") == "no") }
                 .forEach {
                     symbol.variables.add(Pair(it.getAttribute("name"), Integer.parseInt(it.getAttribute("size"))))
                 }
