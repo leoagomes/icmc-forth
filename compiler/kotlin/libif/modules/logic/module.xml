@@ -61,6 +61,7 @@
         <symbol type="function">
             <name>ft_dupz</name>
             <word>?dup</word>
+            <snippet src="ft_dupz.s"/>
             <deps>
                 <dep module="core" name="ft_ds_pop" type="function"/>
                 <dep module="core" name="ft_ds_push" type="function"/>
