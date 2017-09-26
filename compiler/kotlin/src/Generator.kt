@@ -224,26 +224,132 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         // TODO: add iterators
 
 
-        // meta words. don't become code directly
-        dictionary.put("entry", { _ ->
-            val next = consumeAbortOnEnd("a word")
-            if (next.type != TokenType.WORD)
-                abort("Expected word to be defined as entrypoint. Got ${next.typeName}.")
-            entryPoint = next.valueToString()
-            ""
-        })
-        dictionary.put("var", { _ ->
-            val nameToken = consumeAbortOnEnd("a word (name for variable)")
+    }
 
-            if (nameToken.type != TokenType.WORD)
-                abort("Expected a word (name for a variable), but got ${nameToken.typeName}.")
+    private fun handleEntryToken() : String {
+        val nextToken = consumeAbortOnEnd("a word")
 
-            val valToken = consumeToken()
+        if (nextToken.type != TokenType.WORD)
+            abort("'entry' expects a word as argument. Got ${nextToken.typeName}.")
 
-            // TODO: finish
+        entryPoint = nextToken.valueToString()
 
-            ""
-        })
+        return ""
+    }
+
+    private fun matchTokenType(type: TokenType, expected: String, msg: String? = null) {
+        val message = msg ?: "Expected $expected, but got ${currentToken.typeName}"
+
+        if (currentToken.type != type)
+            abort(message)
+    }
+
+    private fun handleColonToken() : String {
+        val fnNameToken = consumeAbortOnEnd("function name")
+
+        matchTokenType(TokenType.WORD, "function name")
+
+        var fnName = (fnNameToken as WordToken).value
+
+        do {
+            when (ct.type) {
+                // TODO: FINISH
+            }
+        } while (currentToken.type != TokenType.SEMICOLON)
+    }
+
+    private fun mangleVariableName(name: String) : String {
+        return name.map {
+            if ("$it".matches(Regex("[a-zA-Z0-9_]")))
+                "$it"
+            else
+                "_${it.toInt()}"
+        }.reduce { before, after ->
+            before + after
+        }
+    }
+
+    private fun handleVarToken() : String {
+        val variableName : String
+        val variableValue : Int
+
+        val nameToken = consumeAbortOnEnd("a word")
+
+        if (nameToken.type != TokenType.WORD)
+            abort("'var' expects a word as argument, got ${nameToken.typeName}.")
+
+        variableName = nameToken.valueToString()
+
+        val valueToken = consumeToken()
+
+        variableValue = when (valueToken.type) {
+            TokenType.NUMBER -> (valueToken as NumberLiteralToken).value
+            TokenType.CHARACTER -> (valueToken as CharLiteralToken).value.toInt()
+            else -> 0
+        }
+
+        val mangledName = mangleVariableName(variableName)
+
+        if (emitter.stringList.containsKey(mangledName))
+            abort("There is already a string with the name '$variableName'.")
+        if (emitter.variableList.containsKey(mangledName))
+            abort("Variable redefinition is not allowed. (variable: $variableName)")
+        if (emitter.functionList.containsKey(mangledName))
+            abort("There is already a function with the name '$variableName'.")
+
+        emitter.addVariable(mangledName, variableValue)
+
+        dictionary[variableName] = { name ->
+            val mangled = mangleVariableName(name)
+            emitter.addRootDependency("core", "ft_ds_push")
+            "loadn r0, #$mangled\n" +
+                    "call ft_ds_push\n"
+        }
+
+        return ""
+    }
+
+    private fun handleStringToken() : String {
+        val variableName : String
+        val variableValue : String
+
+        val nameToken = consumeAbortOnEnd("a word")
+
+        if (nameToken.type != TokenType.WORD)
+            abort("'string' expects a word as argument, got ${nameToken.typeName}.")
+
+        variableName = nameToken.valueToString()
+
+        val stringToken = consumeAbortOnEnd("a word")
+
+        if (stringToken.type != TokenType.STRING)
+            abort("'string' expects a string literal after the word. Got ${stringToken.typeName}")
+
+        variableValue = (stringToken as StringLiteralToken).value
+
+        val mangledName = mangleVariableName(variableName)
+
+        if (emitter.stringList.containsKey(mangledName))
+            abort("String redefinition is not allowed. (string: $variableName)")
+        if (emitter.variableList.containsKey(mangledName))
+            abort("There is already a variable with the name '$variableName'.")
+        if (emitter.functionList.containsKey(mangledName))
+            abort("There is already a function with the name '$variableName'.")
+
+        emitter.addStringLiteral(content = variableValue, name = mangledName)
+
+        dictionary[variableName] = { name ->
+            val mangled = mangleVariableName(name)
+            emitter.addRootDependency("core", "ft_ds_push")
+            "loadn r0, #$mangled\n" +
+                    "call ft_ds_push\n"
+        }
+
+        return ""
+    }
+
+    private fun handleArrayToken() : String {
+        
     }
 
     private fun abort(reason: String) {

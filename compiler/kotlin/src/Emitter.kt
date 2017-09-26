@@ -28,9 +28,9 @@ class Emitter(outFilePath: String, val libIF: LibIF){
 
     fun addVariable(name: String, size: Int) = variableList.put(name, size)
     fun addFunction(name: String, contents: String) = functionList.put(name, contents)
-    fun addStringLiteral(content: String) : String {
+    fun addStringLiteral(content: String, name: String? = null) : String {
         val escaped = escapeString(content)
-        val strName = "STRL_${stringList.count()}"
+        val strName = name ?: "STRL_${stringList.count()}"
 
         if (!stringList.containsValue(escaped)) {
             stringList.put(strName, escaped)

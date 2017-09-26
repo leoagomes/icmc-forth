@@ -1,10 +1,10 @@
 
 enum class TokenType{
-    WORD, NUMBER, STRING, CHARACTER, END, COLON, SEMICOLON
+    WORD, NUMBER, STRING, CHARACTER, END, COLON, SEMICOLON, QUOTE, VAR, ENTRY, STRING_TOKEN
 }
 
 abstract class Token(val typeName: String, val type: TokenType, val line: Int, val col: Int) {
-    abstract fun valueToString() : String
+    open fun valueToString() : String = typeName
     override fun toString() : String = "Token(value: ${valueToString()} type: $typeName, line: $line, col: $col)"
 }
 
@@ -36,3 +36,11 @@ class ColonToken(line: Int, col: Int) : Token("colon", TokenType.COLON, line, co
 class SemiColonToken(line: Int, col: Int) : Token("semicolon", TokenType.SEMICOLON, line, col) {
     override fun valueToString(): String = ";"
 }
+
+class QuoteToken(line: Int, col: Int) : Token("quote", TokenType.QUOTE, line, col) {
+    override fun valueToString(): String = "'"
+}
+
+class VarToken(line: Int, col: Int) : Token("var", TokenType.VAR, line, col)
+class EntrypointToken(line: Int, col: Int) : Token("entry", TokenType.ENTRY, line, col)
+class StringToken(line: Int, col: Int) : Token("string", TokenType.STRING_TOKEN, line, col)
