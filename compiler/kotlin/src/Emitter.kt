@@ -6,6 +6,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
     var variableList : MutableMap<String, Int> = mutableMapOf()
     var stringList : MutableMap<String, String> = mutableMapOf()
     var functionList : MutableMap<String, String> = mutableMapOf()
+    var staticsList : MutableMap<String, MutableList<Int>> = mutableMapOf()
     var rootDependencies : MutableList<Pair<String, String>> = mutableListOf()
     var firstChunk : String = "; created by the if compiler "
 
@@ -84,6 +85,13 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         }
         functionList.forEach { _, contents ->
             emitChunk(contents)
+        }
+        staticsList.forEach { name, values ->
+            var chunk = ""
+
+            values.forEachIndexed { index, value ->
+                chunk += "static $name + #$index, #$value\n"
+            }
         }
     }
 }

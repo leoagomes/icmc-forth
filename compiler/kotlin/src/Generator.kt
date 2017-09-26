@@ -222,21 +222,45 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         })
 
         // TODO: add iterators
+
+
+        // meta words. don't become code directly
+        dictionary.put("entry", { _ ->
+            val next = consumeAbortOnEnd("a word")
+            if (next.type != TokenType.WORD)
+                abort("Expected word to be defined as entrypoint. Got ${next.typeName}.")
+            entryPoint = next.valueToString()
+            ""
+        })
+        dictionary.put("var", { _ ->
+            val nameToken = consumeAbortOnEnd("a word (name for variable)")
+
+            if (nameToken.type != TokenType.WORD)
+                abort("Expected a word (name for a variable), but got ${nameToken.typeName}.")
+
+            val valToken = consumeToken()
+
+            // TODO: finish
+
+            ""
+        })
     }
 
     private fun abort(reason: String) {
         throw GeneratorAbortedException(reason)
     }
 
-    private fun consumeToken() {
+    private fun consumeToken() : Token {
         currentToken = lexer.readToken()
+        return currentToken
     }
 
-    fun consumeAbortOnEnd(expected: String = "a token") {
+    fun consumeAbortOnEnd(expected: String = "a token") : Token {
         consumeToken()
         if (currentToken.type == TokenType.END) {
             abort("Expected $expected, got ${currentToken.valueToString()}. ($currentToken)")
         }
+        return currentToken
     }
 
 
