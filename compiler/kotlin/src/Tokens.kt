@@ -1,6 +1,6 @@
 
 enum class TokenType{
-    WORD, NUMBER, STRING, CHARACTER, END, COLON, SEMICOLON, QUOTE, VAR, ENTRY, STRING_TOKEN
+    WORD, NUMBER, STRING, CHARACTER, END, COLON, SEMICOLON, QUOTE, VAR, ENTRY, STRING_TOKEN, OPEN_CURLY, CLOSE_CURLY
 }
 
 abstract class Token(val typeName: String, val type: TokenType, val line: Int, val col: Int) {
@@ -44,3 +44,6 @@ class QuoteToken(line: Int, col: Int) : Token("quote", TokenType.QUOTE, line, co
 class VarToken(line: Int, col: Int) : Token("var", TokenType.VAR, line, col)
 class EntrypointToken(line: Int, col: Int) : Token("entry", TokenType.ENTRY, line, col)
 class StringToken(line: Int, col: Int) : Token("string", TokenType.STRING_TOKEN, line, col)
+
+class OpenCurlyToken(line: Int, col: Int) : Token("{", TokenType.OPEN_CURLY, line, col)
+class CloseCurlyToken(line: Int, col: Int) : Token("}", TokenType.CLOSE_CURLY, line, col)

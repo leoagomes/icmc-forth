@@ -36,7 +36,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         dictionary.put("if", { _ ->
             val currentLevel = decisionContext.peek() + 1
             decisionContext.push(currentLevel)
-            decisionElseContext.push(0)
+            decisionElseContext.push(false)
 
             val levelString = "${functionName}_if${currentLevel}"
             decisionContext.push(currentLevel)
@@ -252,10 +252,12 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         var fnName = (fnNameToken as WordToken).value
 
         do {
-            when (ct.type) {
+            when (currentToken.type) {
                 // TODO: FINISH
             }
         } while (currentToken.type != TokenType.SEMICOLON)
+
+        return ""
     }
 
     private fun mangleVariableName(name: String) : String {
@@ -297,15 +299,12 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         if (emitter.functionList.containsKey(mangledName))
             abort("There is already a function with the name '$variableName'.")
 
-        emitter.addVariable(mangledName, variableValue)
+        emitter.addVariable(mangledName, 1)
 
-        dictionary[variableName] = { name ->
-            val mangled = mangleVariableName(name)
-            emitter.addRootDependency("core", "ft_ds_push")
-            "loadn r0, #$mangled\n" +
-                    "call ft_ds_push\n"
-        }
+        if (variableValue != 0)
+            emitter.staticsList[mangledName] = mutableListOf(variableValue)
 
+        dictionary.put(variableName) { defaultVariableHandler(it) }
         return ""
     }
 
@@ -337,19 +336,56 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("There is already a function with the name '$variableName'.")
 
         emitter.addStringLiteral(content = variableValue, name = mangledName)
-
-        dictionary[variableName] = { name ->
-            val mangled = mangleVariableName(name)
-            emitter.addRootDependency("core", "ft_ds_push")
-            "loadn r0, #$mangled\n" +
-                    "call ft_ds_push\n"
-        }
+        dictionary.put(variableName) { defaultVariableHandler(it) }
 
         return ""
     }
 
     private fun handleArrayToken() : String {
-        
+        val nameToken = consumeAbortOnEnd("a word")
+        val arrayValues = mutableListOf<Int>()
+
+        if (nameToken.type != TokenType.WORD)
+            abort("'array' expects a name for the array. Got ${nameToken.typeName}.")
+
+        val variableName = nameToken.valueToString()
+
+        val openToken = consumeAbortOnEnd("'{'")
+
+        if (openToken.type != TokenType.OPEN_CURLY)
+            abort("'array' expects an array declaration ('{ ... }') after the array's name. Got ${openToken.typeName}.")
+
+        consumerLoop@ do {
+            consumeAbortOnEnd(", at least, end of array declaration")
+
+            when (currentToken.type) {
+                TokenType.CHARACTER -> arrayValues.add((currentToken as CharLiteralToken).value.toInt())
+                TokenType.NUMBER -> arrayValues.add((currentToken as NumberLiteralToken).value)
+                TokenType.CLOSE_CURLY -> continue@consumerLoop
+                else -> abort("An array literal can only contain character or number literals.")
+            }
+
+        } while(currentToken.type != TokenType.CLOSE_CURLY)
+
+        val mangled = mangleVariableName(variableName)
+
+        if (emitter.staticsList.containsKey(mangled))
+            abort("Array redefinition not allowed.")
+        if (emitter.variableList.containsKey(mangled))
+            abort("There is already a variable with the name $variableName.")
+        if (emitter.stringList.containsKey(mangled))
+            abort("There is already a string with the name $variableName.")
+
+        emitter.staticsList[mangled] = arrayValues
+        dictionary.put(variableName) { defaultVariableHandler(it) }
+        return ""
+    }
+
+    private fun defaultVariableHandler(name: String) : String {
+        val mangled = mangleVariableName(name)
+        emitter.addRootDependency("core", "ft_ds_push")
+        return "loadn r0, #$mangled\n" +
+                "call ft_ds_push\n"
     }
 
     private fun abort(reason: String) {

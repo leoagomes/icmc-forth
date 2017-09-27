@@ -58,7 +58,7 @@ class Lexer(inputFile: String) {
         when (currentCodePoint.toChar()) {
             '\\' -> advance('\n')
             '(' -> advance(')')
-            '{' -> advance('}')
+            '[' -> advance('}')
         }
     }
 
@@ -145,6 +145,10 @@ class Lexer(inputFile: String) {
             ";" -> SemiColonToken(cline, ccol)
             "'" -> QuoteToken(cline, ccol)
             "var" -> VarToken(cline, ccol)
+            "entry" -> EntrypointToken(cline, ccol)
+            "string" -> StringToken(cline, ccol)
+            "{" -> OpenCurlyToken(cline, ccol)
+            "}" -> CloseCurlyToken(cline, ccol)
             else -> WordToken(value, cline, ccol)
         }
     }
