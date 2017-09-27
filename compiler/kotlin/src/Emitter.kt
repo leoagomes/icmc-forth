@@ -26,18 +26,49 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         return str
     }
 
+    private fun hashString(str: String) : Long {
+        var hash : Long = 5381
+
+        for(c in str)
+            hash = (hash.shl(5) + hash) + c.toInt()
+
+        return hash
+    }
+
     fun addVariable(name: String, size: Int) = variableList.put(name, size)
     fun addFunction(name: String, contents: String) = functionList.put(name, contents)
     fun addStringLiteral(content: String, name: String? = null) : String {
         val escaped = escapeString(content)
-        val strName = name ?: "STRL_${stringList.count()}"
+        val hash = hashString(content)
 
-        if (!stringList.containsValue(escaped)) {
-            stringList.put(strName, escaped)
+        val strName = name ?: "STRL_$hash"
+
+        if (stringList.containsKey(strName))
             return strName
+
+        return if (!stringList.containsValue(escaped)) {
+            stringList.put(strName, escaped)
+            strName
         } else {
-            return stringList.filter { entry -> entry.value == content }.keys.first()
+            stringList.filter { entry -> entry.value == content }.keys.first()
         }
+    }
+    fun hasStringLiteral(literal: String) : Boolean {
+        val hashed = hashString(literal)
+        val strName = "STRL_$hashed"
+
+        if (stringList.containsKey(strName))
+            return true
+
+        return stringList.containsValue(escapeString(literal))
+    }
+    fun getNameForStringLiteral(literal: String) : String? {
+        if (!hasStringLiteral(literal))
+            return null
+
+        val escaped = escapeString(literal)
+
+        return stringList.filter { it.value == escaped }.keys.first()
     }
     fun addRootDependency(module: String, name: String) {
         val matching = rootDependencies.filter { p -> p.first == module && p.second == name }

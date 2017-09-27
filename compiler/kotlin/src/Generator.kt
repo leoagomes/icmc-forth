@@ -251,11 +251,62 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
         var fnName = (fnNameToken as WordToken).value
 
+        var fnBody : String = ""
+
         do {
-            when (currentToken.type) {
-                // TODO: FINISH
+            fnBody += when (currentToken.type) {
+                TokenType.WORD -> {
+                    val wordToken = currentToken as WordToken
+                    if (!dictionary.containsKey(wordToken.value))
+                        abort("'${wordToken.value}' is not defined.")
+
+                    dictionary[wordToken.value]!!.invoke(wordToken.value)
+                }
+                TokenType.SEMICOLON -> ""
+                TokenType.STRING -> {
+                    val stringValue = currentToken as StringLiteralToken
+                    val strName = emitter.addStringLiteral(stringValue.value)
+                    emitter.addRootDependency("core", "ft_ds_push")
+                    "loadn r0, #$strName\n" +
+                            "call ft_ds_push\n"
+                }
+                TokenType.CHARACTER -> {
+                    val charValue = (currentToken as CharLiteralToken).value
+                    emitter.addRootDependency("core", "ft_ds_push")
+                    "loadn r0, #${charValue.toInt()}\n" +
+                            "call ft_ds_push\n"
+                }
+                TokenType.NUMBER -> {
+                    val numValue = (currentToken as NumberLiteralToken).value
+                    emitter.addRootDependency("core", "ft_ds_push")
+                    "loadn r0, #$numValue\n" +
+                            "call ft_ds_push\n"
+                }
+                TokenType.QUOTE -> {
+                    val nextToken = consumeAbortOnEnd("a word")
+                    if (nextToken.type != TokenType.WORD)
+                        abort("' expects a word as argument.")
+
+                    val name = (nextToken as WordToken).value
+
+                    if (!dictionary.containsKey(name))
+                        abort("' expects its argument function to be defined.")
+
+                    val mangledName = mangleVariableName(name)
+
+                    emitter.addRootDependency("core", "ft_ds_push")
+                    "loadn r0, #${mangledName}\n" +
+                            "call ft_ds_push\n"
+                }
+                else -> {
+                    abort("Unsupported token (${currentToken.typeName}) inside function declaration. " +
+                            "(function: $fnName (l${fnNameToken.line}))")
+                    ""
+                }
             }
         } while (currentToken.type != TokenType.SEMICOLON)
+
+
 
         return ""
     }
@@ -404,7 +455,5 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         }
         return currentToken
     }
-
-
 }
 
