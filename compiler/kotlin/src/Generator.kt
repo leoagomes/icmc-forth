@@ -12,6 +12,12 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
     private var loopContext : Stack<Int> = Stack()
     private var functionName : String = "ft_nonfunc_stub"
 
+    init {
+        decisionContext.push(-1)
+        loopContext.push(-1)
+        decisionElseContext.push(false)
+    }
+
     fun bootstrapDictionary() {
         // adding core functions
         libIF.modules.forEach { name, module ->
@@ -222,8 +228,32 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         })
 
         // TODO: add iterators
+        dictionary.put("i", { _ ->
+            val currentLevel = loopContext.peek()
 
+            if (currentLevel == -1)
+                abort("Iterator (i) being used outisde of any loops.")
 
+            emitter.addRootDependency("core", "ft_rs_rscpy")
+
+            "call ft_rs_rscpy\n"
+        })
+        dictionary.put("j", { _ ->
+            val currentLevel = loopContext.peek()
+            if (currentLevel < 1)
+                abort("Iterator (j) being used outside of its possible context.")
+
+            emitter.addRootDependency("core", "ft_ds_push")
+
+            "push r1\n" +
+                    "loadn r1, #${currentLevel * 2}\n" +
+                    "mov r0, r6\n" +
+                    "dec r0\n" +
+                    "sub r0, r0, r1\n" +
+                    "loadi r0, r0\n" +
+                    "call ft_ds_push\n" +
+                    "pop r1\n"
+        })
     }
 
     private fun handleEntryToken() : String {
@@ -262,7 +292,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
                     dictionary[wordToken.value]!!.invoke(wordToken.value)
                 }
-                TokenType.SEMICOLON -> ""
+                TokenType.SEMICOLON -> "rts\n"
                 TokenType.STRING -> {
                     val stringValue = currentToken as StringLiteralToken
                     val strName = emitter.addStringLiteral(stringValue.value)
@@ -306,7 +336,13 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             }
         } while (currentToken.type != TokenType.SEMICOLON)
 
+        dictionary.put(fnName, { name ->
+            val mangled = mangleVariableName(name)
+            "call $mangled\n"
+        })
 
+        val mangled = mangleVariableName(fnName)
+        emitter.addFunction(mangled, fnBody)
 
         return ""
     }
@@ -454,6 +490,27 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("Expected $expected, got ${currentToken.valueToString()}. ($currentToken)")
         }
         return currentToken
+    }
+
+    fun generate() {
+        var token : Token
+        do {
+            token = consumeToken()
+
+            when (token.type) {
+                TokenType.VAR -> handleVarToken()
+                TokenType.ENTRY -> handleEntryToken()
+                TokenType.ARRAY -> handleArrayToken()
+                TokenType.COLON -> handleColonToken()
+                TokenType.STRING_TOKEN -> handleStringToken()
+                else -> abort("Invalid token ${token.valueToString()}. Expected var, string, array or function definition.")
+            }
+        } while (token.type != TokenType.END)
+
+        if (!dictionary.containsKey(entryPoint))
+            abort("There is no declaration for the entry point $entryPoint.")
+
+        emitter.firstChunk += "call"
     }
 }
 

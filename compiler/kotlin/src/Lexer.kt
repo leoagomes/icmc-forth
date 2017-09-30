@@ -147,6 +147,7 @@ class Lexer(inputFile: String) {
             "var" -> VarToken(cline, ccol)
             "entry" -> EntrypointToken(cline, ccol)
             "string" -> StringToken(cline, ccol)
+            "array" -> ArrayToken(cline, ccol)
             "{" -> OpenCurlyToken(cline, ccol)
             "}" -> CloseCurlyToken(cline, ccol)
             else -> WordToken(value, cline, ccol)
