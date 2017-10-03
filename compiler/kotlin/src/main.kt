@@ -4,17 +4,17 @@ import java.nio.*
 import javax.xml.parsers.DocumentBuilderFactory
 
 fun main(args: Array<String>) {
-    var i : Int = 0
+    //val compiler = Compiler(args[0], args[1], "")
+    val inputPath = "teste.txt"
+    val outputPath = "toto.txt"
+    val libifDir = "libif/modules"
 
-    loopity@ do {
-        when (i) {
-            1 -> {
-                i++
-                continue@loopity
-            }
-            else ->
-                    print(i)
-        }
-        i++
-    } while(i < 10)
+    val compiler = Compiler(inputPath, outputPath, libifDir)
+
+    compiler.compile()
+    //try {
+    //    compiler.compile()
+    //} catch (le: Exception) {
+    //    print(le.message);
+    //}
 }

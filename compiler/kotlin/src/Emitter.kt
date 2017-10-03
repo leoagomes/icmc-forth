@@ -114,7 +114,8 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         stringList.forEach { name, contents ->
             emitChunk("$name: string \"$contents\"")
         }
-        functionList.forEach { _, contents ->
+        functionList.forEach { name, contents ->
+            emitChunk("$name:\n")
             emitChunk(contents)
         }
         staticsList.forEach { name, values ->

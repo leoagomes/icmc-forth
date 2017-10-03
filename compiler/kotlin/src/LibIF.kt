@@ -29,10 +29,14 @@ class LibIF(val directory: String) {
             return
 
         val insideFiles = file.listFiles()
-        val moduleFile: File? = insideFiles.first { f -> f.name == "module.xml" }
 
-        if (moduleFile != null)
-            loadModule(moduleFile, file)
+        try {
+            val moduleFile: File? = insideFiles.first { f -> f.name == "module.xml" }
+
+            if (moduleFile != null)
+                loadModule(moduleFile, file)
+        } catch (e: NoSuchElementException) {
+        }
 
         for (child in insideFiles)
             recursiveLoadModules(child)

@@ -11,6 +11,6 @@ class Compiler(inputFile: String, outputFile: String, libIFDirectory: String){
 
     fun compile() {
         generator.generate()
-        emitter
+        emitter.emitFinal()
     }
 }

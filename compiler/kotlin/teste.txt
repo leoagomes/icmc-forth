@@ -2,7 +2,5 @@
 
 \ olá este é um comentário
 
-variable var
-
 : test
-	10 0 1 . do leave loop "my\x41str" 'a' '\n' '\x41' ;
+    10 0 do i . loop ;

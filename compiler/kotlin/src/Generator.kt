@@ -510,7 +510,10 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         if (!dictionary.containsKey(entryPoint))
             abort("There is no declaration for the entry point $entryPoint.")
 
-        emitter.firstChunk += "call"
+        emitter.addRootDependency("core", "ft_setup")
+        emitter.addFunction("ft_emain", "call ft_setup\ncall $entryPoint\nhlt\n")
+
+        emitter.firstChunk += "jmp ft_email\n"
     }
 }
 
