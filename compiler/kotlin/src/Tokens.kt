@@ -6,7 +6,7 @@ enum class TokenType{
 
 abstract class Token(val typeName: String, val type: TokenType, val line: Int, val col: Int) {
     open fun valueToString() : String = typeName
-    override fun toString() : String = "Token(value: ${valueToString()} type: $typeName, line: $line, col: $col)"
+    override fun toString() : String = "Token(value: ${valueToString()}, type: $typeName, line: $line, col: $col)"
 }
 
 class WordToken(val value: String, line: Int, col: Int) : Token("word", TokenType.WORD, line, col) {

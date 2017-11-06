@@ -32,6 +32,9 @@
             <name>prim_printno</name>
             <word>$printno$</word>
             <snippet src="prim_printno.s"/>
+            <deps>
+                <dep module="primitives" name="prim_printstr" type="function"/>
+            </deps>
             <vars>
                 <var name="FT_NUMSTR_BUFFER" size="5" declare="no"/>
                 <var name="FT_NUMSTR_BUFFER_END" size="2" declare="no"/>

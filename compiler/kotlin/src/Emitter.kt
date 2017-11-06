@@ -8,7 +8,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
     var functionList : MutableMap<String, String> = mutableMapOf()
     var staticsList : MutableMap<String, MutableList<Int>> = mutableMapOf()
     var rootDependencies : MutableList<Pair<String, String>> = mutableListOf()
-    var firstChunk : String = "; created by the if compiler "
+    var firstChunk : String = "; created by the if compiler\n"
 
 
     private fun escapeString(text: String) : String {
@@ -87,7 +87,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         val depName = dependency.second
         val depModule = dependency.first
 
-        if (functionList.contains(depName))
+        if (functionList.contains(depName) || variableList.containsKey(depName))
             return
 
         if (!libIF.modules.contains(depModule))
@@ -99,7 +99,11 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         symbol.dependencies.forEach { s -> recSolveDependencies(s) }
 
         symbol.variables.forEach { v -> addVariable(v.first, v.second) }
-        addFunction(depName, symbol.snippet)
+
+        when (symbol.type) {
+            SymbolType.VARIABLE -> symbol.variables.forEach { v -> addVariable(v.first, v.second) }
+            SymbolType.FUNCTION -> addFunction(depName, symbol.snippet)
+        }
     }
 
     fun emitChunk(chunk: String) {
@@ -108,16 +112,28 @@ class Emitter(outFilePath: String, val libIF: LibIF){
 
     fun emitFinal() {
         emitChunk(firstChunk)
+
+        emitChunk("\n\n; *** VARIABLES ***\n")
         variableList.forEach { name, size ->
             emitChunk("$name: var #$size\n")
         }
+        emitChunk("\n; *** END OF VARIABLES ***\n")
+
+        emitChunk("\n\n; *** STRINGS ***\n")
         stringList.forEach { name, contents ->
-            emitChunk("$name: string \"$contents\"")
+            emitChunk("$name: string \"$contents\"\n")
         }
+        emitChunk("\n\n; *** END OF STRINGS ***\n")
+
+        emitChunk("\n\n; *** FUNCTIONS ***\n")
         functionList.forEach { name, contents ->
-            emitChunk("$name:\n")
+            emitChunk("; &&& $name\n")
             emitChunk(contents)
+            emitChunk("\n; &&& end of $name\n\n")
         }
+        emitChunk("\n\n; *** END OF FUNCTIONS ***\n")
+
+        emitChunk("\n\n; *** STATIC ***\n")
         staticsList.forEach { name, values ->
             var chunk = ""
 
@@ -125,5 +141,6 @@ class Emitter(outFilePath: String, val libIF: LibIF){
                 chunk += "static $name + #$index, #$value\n"
             }
         }
+        emitChunk("\n; *** END OF STATIC ***\n")
     }
 }

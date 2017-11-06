@@ -279,11 +279,15 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
         matchTokenType(TokenType.WORD, "function name")
 
-        var fnName = (fnNameToken as WordToken).value
+        val fnName = mangleVariableName((fnNameToken as WordToken).value)
+        functionName = fnName
 
-        var fnBody : String = ""
+
+        var fnBody = "$fnName:\n"
 
         do {
+            consumeToken()
+
             fnBody += when (currentToken.type) {
                 TokenType.WORD -> {
                     val wordToken = currentToken as WordToken
@@ -335,6 +339,8 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                 }
             }
         } while (currentToken.type != TokenType.SEMICOLON)
+
+        functionName = "ft_nonfunc_stub"
 
         dictionary.put(fnName, { name ->
             val mangled = mangleVariableName(name)
@@ -493,8 +499,10 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
     }
 
     fun generate() {
+        bootstrapDictionary()
+
         var token : Token
-        do {
+        loop@ do {
             token = consumeToken()
 
             when (token.type) {
@@ -503,6 +511,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                 TokenType.ARRAY -> handleArrayToken()
                 TokenType.COLON -> handleColonToken()
                 TokenType.STRING_TOKEN -> handleStringToken()
+                TokenType.END -> continue@loop
                 else -> abort("Invalid token ${token.valueToString()}. Expected var, string, array or function definition.")
             }
         } while (token.type != TokenType.END)
@@ -511,9 +520,9 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("There is no declaration for the entry point $entryPoint.")
 
         emitter.addRootDependency("core", "ft_setup")
-        emitter.addFunction("ft_emain", "call ft_setup\ncall $entryPoint\nhlt\n")
+        emitter.addFunction("ft_emain", "ft_emain:\ncall ft_setup\ncall $entryPoint\nhalt\n")
 
-        emitter.firstChunk += "jmp ft_email\n"
+        emitter.firstChunk += "jmp ft_emain\n"
     }
 }
 

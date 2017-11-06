@@ -87,5 +87,15 @@
                 <dep module="primitives" name="prim_resetcursor" type="function"/>
             </deps>
         </symbol>
+        <symbol type="function">
+            <name>ft_dot</name>
+            <word>.</word>
+            <snippet src="ft_dot.s"/>
+            <deps>
+                <dep module="primitives" name="prim_printno" type="function"/>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
     </symbols>
 </module>

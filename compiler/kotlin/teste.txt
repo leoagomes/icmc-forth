@@ -2,5 +2,7 @@
 
 \ olá este é um comentário
 
+entry test
+
 : test
     10 0 do i . loop ;

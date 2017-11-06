@@ -70,12 +70,15 @@ class LibIF(val directory: String) {
         val name = element.getElementsByTagName("name").item(0).textContent
         val word = element.getElementsByTagName("word").item(0).textContent
 
-        val snippetElement = element.getElementsByTagName("snippet").item(0) as Element
-        val snippet = if (snippetElement.hasAttribute("src")) {
-            val loadedSnippet = File(parent, snippetElement.getAttribute("src"))
-            loadedSnippet.readText()
-        } else {
-            snippetElement.textContent
+        val snippetElement = element.getElementsByTagName("snippet").item(0) as Element?
+
+        val snippet = when {
+            snippetElement == null -> ""
+            snippetElement.hasAttribute("src") -> {
+                val loadedSnippet = File(parent.parent, snippetElement.getAttribute("src"))
+                loadedSnippet.readText()
+            }
+            else -> snippetElement.textContent
         }
 
         val symbol = Symbol(if (type == "function") { SymbolType.FUNCTION } else { SymbolType.VARIABLE }, name, word, snippet)
@@ -91,7 +94,7 @@ class LibIF(val directory: String) {
 
         val varNodes = element.getElementsByTagName("var")
         (0..(varNodes.length - 1))
-                .map { depNodes.item(it) }
+                .map { varNodes.item(it) }
                 .filter { it.nodeType == Node.ELEMENT_NODE }
                 .map { it as Element }
                 .filter { !(it.hasAttribute("declare") && it.getAttribute("declare") == "no") }
