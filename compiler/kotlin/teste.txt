@@ -5,4 +5,4 @@
 entry test
 
 : test
-    10 0 do i . loop ;
+    20 0 do i 'c' type . loop ;

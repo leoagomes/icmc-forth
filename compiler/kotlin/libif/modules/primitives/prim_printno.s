@@ -22,11 +22,12 @@ prim_printno_loop:
 	add r4, r4, r6
 	storei r2, r4
 	dec r2
-	div r4, r0, r3
-	cmp r4, r5
+	div r0, r0, r3
+	cmp r0, r5
 	jne prim_printno_loop
-	
-	loadn r0, #FT_NUMSTR_BUFFER
+
+	inc r2
+	mov r0, r2
 prim_printno_fsl:
 	loadi r1, r0
 	cmp r1, r6

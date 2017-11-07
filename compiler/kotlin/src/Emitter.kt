@@ -17,12 +17,6 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         str.replace("\"", "\\\"")
         str.replace("\\", "\\\\")
 
-        for (i in 0..(str.length)) {
-            if (str[i] == 0.toChar()) {
-                str = str.substring(0, i) + "\\0" + str.substring(i + 1)
-            }
-        }
-
         return str
     }
 
@@ -32,7 +26,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         for(c in str)
             hash = (hash.shl(5) + hash) + c.toInt()
 
-        return hash
+        return Math.abs(hash)
     }
 
     fun addVariable(name: String, size: Int) = variableList.put(name, size)

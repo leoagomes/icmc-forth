@@ -21,6 +21,7 @@ prim_printstr_loop:
 	jmp prim_printstr_loop
 
 prim_printstr_loop_end:
+    store FT_CONSOLE_CURSOR_POS, r1
 	pop r4
 	pop r3
 	pop r2
