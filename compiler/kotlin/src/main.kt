@@ -24,12 +24,10 @@ fun main(args: Array<String>) {
     val compiler = Compiler(args[0], args[1], ifLocation)
     //val compiler = Compiler(inputPath, outputPath, libifDir)
 
-    compiler.compile()
-    /*
     try {
         compiler.compile()
     } catch (le: Exception) {
+        print("${compiler.lexer.line}:${compiler.lexer.col}: ")
         print(le.message)
     }
-    */
 }

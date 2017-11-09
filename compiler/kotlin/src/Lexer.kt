@@ -143,7 +143,7 @@ class Lexer(inputFile: String) {
         return when (value) {
             ":" -> ColonToken(cline, ccol)
             ";" -> SemiColonToken(cline, ccol)
-            "'" -> QuoteToken(cline, ccol)
+            "quote" -> QuoteToken(cline, ccol)
             "var" -> VarToken(cline, ccol)
             "entry" -> EntrypointToken(cline, ccol)
             "string" -> StringToken(cline, ccol)

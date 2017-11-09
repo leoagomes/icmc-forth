@@ -136,5 +136,8 @@ class Emitter(outFilePath: String, val libIF: LibIF){
             }
         }
         emitChunk("\n; *** END OF STATIC ***\n")
+
+        // Puts the HERE label last. Keep it here as code may depend on this.
+        emitChunk("FT_HERE_LABEL:")
     }
 }

@@ -39,13 +39,21 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         }
 
         // add keywords
+        dictionary.put("true", { _ ->
+            emitter.addRootDependency("core", "ft_ds_push")
+            "loadn r0, #65535\ncall ft_ds_push\n"
+        })
+        dictionary.put("false", {
+            emitter.addRootDependency("core", "ft_ds_push")
+            "loadn r0, #0\ncall ft_ds_push\n"
+        })
+
         dictionary.put("if", { _ ->
             val currentLevel = decisionContext.peek() + 1
             decisionContext.push(currentLevel)
             decisionElseContext.push(false)
 
             val levelString = "${functionName}_if${currentLevel}"
-            decisionContext.push(currentLevel)
 
             emitter.addRootDependency("core", "ft_ds_pop")
 
@@ -55,7 +63,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "xor r1, r1, r1\n" +
                     "cmp r0, r1\n" +
                     "pop r1\n" +
-                    "jz ${levelString}_after\n" +
+                    "jeq ${levelString}_after\n" +
                     "${levelString}_in:\n"
         })
         dictionary.put("else", { _ ->
@@ -279,9 +287,9 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
         matchTokenType(TokenType.WORD, "function name")
 
-        val fnName = mangleVariableName((fnNameToken as WordToken).value)
+        val word = (fnNameToken as WordToken).value
+        val fnName = mangleVariableName(word)
         functionName = fnName
-
 
         var fnBody = "$fnName:\n"
 
@@ -324,7 +332,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     val name = (nextToken as WordToken).value
 
                     if (!dictionary.containsKey(name))
-                        abort("' expects its argument function to be defined.")
+                        abort("' expects its argument function ($name) to be defined.")
 
                     val mangledName = mangleVariableName(name)
 
@@ -342,21 +350,21 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
         functionName = "ft_nonfunc_stub"
 
-        dictionary.put(fnName, { name ->
-            val mangled = mangleVariableName(name)
-            "call $mangled\n"
+        dictionary.put(word, { name ->
+            "call $fnName\n"
         })
 
-        val mangled = mangleVariableName(fnName)
-        emitter.addFunction(mangled, fnBody)
+        emitter.addFunction(fnName, fnBody)
 
         return ""
     }
 
     private fun mangleVariableName(name: String) : String {
-        return name.map {
+        return "u_" + name.map {
             if ("$it".matches(Regex("[a-zA-Z0-9_]")))
                 "$it"
+            else if ("$it" == "-")
+                "_"
             else
                 "_${it.toInt()}"
         }.reduce { before, after ->
@@ -520,7 +528,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("There is no declaration for the entry point $entryPoint.")
 
         emitter.addRootDependency("core", "ft_setup")
-        emitter.addFunction("ft_emain", "ft_emain:\ncall ft_setup\ncall $entryPoint\nhalt\n")
+        emitter.addFunction("ft_emain", "ft_emain:\ncall ft_setup\ncall ${mangleVariableName(entryPoint)}\nhalt\n")
 
         emitter.firstChunk += "jmp ft_emain\n"
     }
