@@ -47,6 +47,9 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             emitter.addRootDependency("core", "ft_ds_push")
             "loadn r0, #0\ncall ft_ds_push\n"
         })
+        dictionary.put("\$breakp\$", { _ ->
+            "breakp\n"
+        })
 
         dictionary.put("if", { _ ->
             val currentLevel = decisionContext.peek() + 1
@@ -110,7 +113,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                      "${levelString}_begin:\n"
         })
         dictionary.put("leave", { _ ->
-            val currentLevel = loopContext.pop()
+            val currentLevel = loopContext.peek()
 
             if (currentLevel == -1)
                 abort("No loop to leave.")
@@ -202,7 +205,8 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "xor r1, r1, r1\n" +
                     "cmp r0, r1\n" +
                     "pop r1\n" +
-                    "jeq ${levelString}_begin\n"
+                    "jeq ${levelString}_begin\n" +
+                    "${levelString}_leave:\n"
         })
         dictionary.put("while", { _ ->
             val currentLevel = loopContext.peek()
