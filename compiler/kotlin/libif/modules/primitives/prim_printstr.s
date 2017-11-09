@@ -12,11 +12,11 @@ prim_printstr:
 
 prim_printstr_loop:
 	loadi r3, r0
+	inc r1
 	cmp r3, r2
 	jeq prim_printstr_loop_end
 	add r3, r3, r4             ; add color to char
 	outchar r3, r1
-	inc r1
 	inc r0
 	jmp prim_printstr_loop
 

@@ -144,7 +144,6 @@
                 <dep module="core" name="ft_ds_pop" type="function"/>
             </deps>
         </symbol>
-
         <symbol type="function">
             <name>ft_setup</name>
             <word>$reset$</word>
@@ -153,6 +152,19 @@
                 <dep module="core" name="FT_DATA_STACK_BEGIN" type="variable"/>
                 <dep module="core" name="FT_RETURN_STACK_BEGIN" type="variable"/>
             </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_execute</name>
+            <word>execute</word>
+            <snippet src="ft_execute.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_here</name>
+            <word>here</word>
+            <snippet src="ft_here.s"/>
         </symbol>
     </symbols>
 </module>

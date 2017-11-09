@@ -66,5 +66,14 @@
                 <dep module="core" name="ft_ds_push" type="function"/>
             </deps>
         </symbol>
+        <symbol type="function">
+            <name>ft_not</name>
+            <word>not</word>
+            <snippet src="ft_not.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
     </symbols>
 </module>

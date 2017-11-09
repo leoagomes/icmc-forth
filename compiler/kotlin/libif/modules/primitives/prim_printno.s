@@ -28,12 +28,6 @@ prim_printno_loop:
 
 	inc r2
 	mov r0, r2
-prim_printno_fsl:
-	loadi r1, r0
-	cmp r1, r6
-	jne prim_printno_fsl_end
-	inc r0
-	jmp prim_printno_fsl
 
 prim_printno_fsl_end:
 	call prim_printstr

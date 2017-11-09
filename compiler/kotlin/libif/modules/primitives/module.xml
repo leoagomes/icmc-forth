@@ -69,5 +69,10 @@
                 <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
             </deps>
         </symbol>
+        <symbol type="function">
+            <name>prim_halt</name>
+            <word>$halt$</word>
+            <snippet src="prim_halt.s"/>
+        </symbol>
     </symbols>
 </module>
