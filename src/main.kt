@@ -6,7 +6,7 @@ import kotlin.jvm.*
 
 fun main(args: Array<String>) {
     if (args.size < 2) {
-        print("usage:\nifc <source> <binary-destination> [<libIF-directory>]\n")
+        print("usage:\nifc <source> <binary-destination> [<libIF-directory> <include-dirs ...>]\n")
         exitProcess(1)
     }
 
