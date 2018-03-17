@@ -1,8 +1,0 @@
-( vim: syntax=forth )
-
-\ olá este é um comentário
-
-entry test
-
-: test
-    20 0 do i 'c' type . loop ;

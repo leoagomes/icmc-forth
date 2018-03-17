@@ -1,8 +1,11 @@
+import java.io.File
 import java.util.*
+import kotlin.NoSuchElementException
 
 class GeneratorAbortedException(override var message: String) : Exception(message)
 
-class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
+class Generator(private var lexer: Lexer, private val libIF: LibIF, private val emitter: Emitter,
+                private val includeDirectories: List<String>) {
     var entryPoint : String = "main"
     var currentToken : Token = TheEndToken(0,0)
     var dictionary : MutableMap<String, (w: String) -> String> = mutableMapOf()
@@ -11,6 +14,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
     private var decisionElseContext : Stack<Boolean> = Stack()
     private var loopContext : Stack<Int> = Stack()
     private var functionName : String = "ft_nonfunc_stub"
+    private var lexerStack: Stack<Lexer> = Stack()
 
     init {
         decisionContext.push(-1)
@@ -18,11 +22,11 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         decisionElseContext.push(false)
     }
 
-    fun bootstrapDictionary() {
+    private fun bootstrapDictionary() {
         // adding core functions
-        libIF.modules.forEach { name, module ->
+        libIF.modules.forEach { _, module ->
             module.symbols.forEach { sym ->
-                dictionary.put(sym.word, { word ->
+                dictionary[sym.word] = {
                     emitter.addRootDependency(module.name, sym.name)
 
                     when (sym.type) {
@@ -34,29 +38,29 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                                     "call ft_ds_push\n"
                         }
                     }
-                })
+                }
             }
         }
 
         // add keywords
-        dictionary.put("true", { _ ->
+        dictionary["true"] = { _ ->
             emitter.addRootDependency("core", "ft_ds_push")
             "loadn r0, #65535\ncall ft_ds_push\n"
-        })
-        dictionary.put("false", {
+        }
+        dictionary["false"] = {
             emitter.addRootDependency("core", "ft_ds_push")
             "loadn r0, #0\ncall ft_ds_push\n"
-        })
-        dictionary.put("\$breakp\$", { _ ->
+        }
+        dictionary["\$breakp\$"] = { _ ->
             "breakp\n"
-        })
+        }
 
-        dictionary.put("if", { _ ->
+        dictionary["if"] = { _ ->
             val currentLevel = decisionContext.peek() + 1
             decisionContext.push(currentLevel)
             decisionElseContext.push(false)
 
-            val levelString = "${functionName}_if${currentLevel}"
+            val levelString = "${functionName}_if$currentLevel"
 
             emitter.addRootDependency("core", "ft_ds_pop")
 
@@ -68,67 +72,67 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "pop r1\n" +
                     "jeq ${levelString}_after\n" +
                     "${levelString}_in:\n"
-        })
-        dictionary.put("else", { _ ->
+        }
+        dictionary["else"] = { _ ->
             val currentLevel = decisionContext.peek()
             if (currentLevel == -1)
-                abort("More elses than ifs.")
+                abort("More 'else's than 'if's.")
             if (decisionElseContext.peek())
-                abort("Multiple elses for an if.")
+                abort("Multiple 'else's for an 'if'.")
 
-            val levelString = "${functionName}_if${currentLevel}"
+            val levelString = "${functionName}_if$currentLevel"
 
             decisionElseContext.pop()
             decisionElseContext.push(true)
 
             "jmp ${levelString}_after_else\n" +
                     "${levelString}_after:\n"
-        })
-        dictionary.put("then", { _ ->
+        }
+        dictionary["then"] = { _ ->
             val currentLevel = decisionContext.pop()
             if (currentLevel == -1)
-                abort("More thens than ifs.")
+                abort("More 'then's than ifs.")
 
-            val levelString = "${functionName}_if${currentLevel}"
+            val levelString = "${functionName}_if$currentLevel"
 
             if (decisionElseContext.pop()) {
                 "${levelString}_after_else:\n"
             } else {
                 "${levelString}_after:\n"
             }
-        })
+        }
 
-        dictionary.put("do", { _ ->
+        dictionary["do"] = { _ ->
             val currentLevel = loopContext.peek() + 1
             loopContext.push(currentLevel)
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             emitter.addRootDependency("core", "ft_ds_swap")
             emitter.addRootDependency("core", "ft_rs_ds2rs")
 
-             "${levelString}_prepare:\n" +
-                     "call ft_ds_swap\n" +
-                     "call ft_rs_ds2rs\n" +
-                     "call ft_rs_ds2rs\n" +
-                     "${levelString}_begin:\n"
-        })
-        dictionary.put("leave", { _ ->
+            "${levelString}_prepare:\n" +
+                    "call ft_ds_swap\n" +
+                    "call ft_rs_ds2rs\n" +
+                    "call ft_rs_ds2rs\n" +
+                    "${levelString}_begin:\n"
+        }
+        dictionary["leave"] = { _ ->
             val currentLevel = loopContext.peek()
 
             if (currentLevel == -1)
                 abort("No loop to leave.")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             "jmp ${levelString}_leave\n"
-        })
-        dictionary.put("loop", { _ ->
+        }
+        dictionary["loop"] = { _ ->
             val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("Not 'do'ing anything. (Can't loop from nothing)")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             emitter.addRootDependency("core", "ft_rs_pop")
             emitter.addRootDependency("core", "ft_rs_push")
@@ -149,14 +153,14 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "${levelString}_leave:\n" +
                     "dec r6\n" +
                     "dec r6\n"
-        })
-        dictionary.put("+loop", { _ ->
+        }
+        dictionary["+loop"] = { _ ->
             val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("Not 'do'ing anything. (Can't +loop from nothing)")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             emitter.addRootDependency("core", "ft_ds_pop")
             emitter.addRootDependency("core", "ft_rs_pop")
@@ -180,22 +184,22 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "${levelString}_leave:\n" +
                     "call ft_rs_pop\n" +
                     "call ft_rs_pop\n"
-        })
+        }
 
-        dictionary.put("begin", { _ ->
+        dictionary["begin"] = { _ ->
             val currentLevel = loopContext.peek() + 1
             loopContext.push(currentLevel)
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             "${levelString}_begin:\n"
-        })
-        dictionary.put("until", { _ ->
+        }
+        dictionary["until"] = { _ ->
             val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'until'.")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             emitter.addRootDependency("core", "ft_ds_pop")
 
@@ -207,14 +211,14 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "pop r1\n" +
                     "jeq ${levelString}_begin\n" +
                     "${levelString}_leave:\n"
-        })
-        dictionary.put("while", { _ ->
+        }
+        dictionary["while"] = { _ ->
             val currentLevel = loopContext.peek()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'while'.")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             emitter.addRootDependency("core", "ft_ds_pop")
 
@@ -225,32 +229,32 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "cmp r0, r1\n" +
                     "pop r1\n" +
                     "jeq ${levelString}_leave\n"
-        })
-        dictionary.put("repeat", { _ ->
+        }
+        dictionary["repeat"] = { _ ->
             val currentLevel = loopContext.pop()
 
             if (currentLevel == -1)
                 abort("No 'begin' matching your 'repeat'.")
 
-            val levelString = "${functionName}_loop${currentLevel}"
+            val levelString = "${functionName}_loop$currentLevel"
 
             "${levelString}_prepeat:\n" +
                     "jmp ${levelString}_begin\n" +
                     "${levelString}_leave:\n"
-        })
+        }
 
         // TODO: add iterators
-        dictionary.put("i", { _ ->
+        dictionary["i"] = { _ ->
             val currentLevel = loopContext.peek()
 
             if (currentLevel == -1)
-                abort("Iterator (i) being used outisde of any loops.")
+                abort("Iterator (i) being used outside of any loops.")
 
             emitter.addRootDependency("core", "ft_rs_rscpy")
 
             "call ft_rs_rscpy\n"
-        })
-        dictionary.put("j", { _ ->
+        }
+        dictionary["j"] = { _ ->
             val currentLevel = loopContext.peek()
             if (currentLevel < 1)
                 abort("Iterator (j) being used outside of its possible context.")
@@ -265,7 +269,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     "loadi r0, r0\n" +
                     "call ft_ds_push\n" +
                     "pop r1\n"
-        })
+        }
     }
 
     private fun handleEntryToken() : String {
@@ -341,7 +345,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                     val mangledName = mangleVariableName(name)
 
                     emitter.addRootDependency("core", "ft_ds_push")
-                    "loadn r0, #${mangledName}\n" +
+                    "loadn r0, #$mangledName\n" +
                             "call ft_ds_push\n"
                 }
                 else -> {
@@ -354,9 +358,9 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
         functionName = "ft_nonfunc_stub"
 
-        dictionary.put(word, { name ->
+        dictionary[word] = {
             "call $fnName\n"
-        })
+        }
 
         emitter.addFunction(fnName, fnBody)
 
@@ -365,12 +369,11 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
 
     private fun mangleVariableName(name: String) : String {
         return "u_" + name.map {
-            if ("$it".matches(Regex("[a-zA-Z0-9_]")))
-                "$it"
-            else if ("$it" == "-")
-                "_"
-            else
-                "_${it.toInt()}"
+            when {
+                "$it".matches(Regex("[a-zA-Z0-9_]")) -> "$it"
+                "$it" == "-" -> "_"
+                else -> "_${it.toInt()}"
+            }
         }.reduce { before, after ->
             before + after
         }
@@ -409,7 +412,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         if (variableValue != 0)
             emitter.staticsList[mangledName] = mutableListOf(variableValue)
 
-        dictionary.put(variableName) { defaultVariableHandler(it) }
+        dictionary[variableName] = { defaultVariableHandler(it) }
         return ""
     }
 
@@ -441,7 +444,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("There is already a function with the name '$variableName'.")
 
         emitter.addStringLiteral(content = variableValue, name = mangledName)
-        dictionary.put(variableName) { defaultVariableHandler(it) }
+        dictionary[variableName] = { defaultVariableHandler(it) }
 
         return ""
     }
@@ -482,8 +485,33 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
             abort("There is already a string with the name $variableName.")
 
         emitter.staticsList[mangled] = arrayValues
-        dictionary.put(variableName) { defaultVariableHandler(it) }
+        dictionary[variableName] = { defaultVariableHandler(it) }
         return ""
+    }
+
+    private fun findAbsoluteFile(includeDirectories: List<String>, fileName: String) : String {
+        val possibleFiles = includeDirectories.map { it + fileName }
+                .toMutableList()
+        possibleFiles.add(fileName)
+
+        return try {
+            possibleFiles.first { File(it).isFile }
+        } catch (e: NoSuchElementException) {
+            throw GeneratorAbortedException("${lexer.inputFile}:${lexer.line}:${lexer.col}: #import not found '$fileName'")
+        }
+    }
+
+    private fun handleImportToken() {
+        val fileNameToken = consumeAbortOnEnd("a string")
+
+        if (fileNameToken.type != TokenType.STRING)
+            abort("#import requires a string token.")
+
+        val fileName = (fileNameToken as StringLiteralToken).value
+        val absoluteFilename = findAbsoluteFile(includeDirectories, fileName)
+        val nextLexer = Lexer(absoluteFilename)
+        lexerStack.push(lexer)
+        lexer = nextLexer
     }
 
     private fun defaultVariableHandler(name: String) : String {
@@ -502,7 +530,7 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
         return currentToken
     }
 
-    fun consumeAbortOnEnd(expected: String = "a token") : Token {
+    private fun consumeAbortOnEnd(expected: String = "a token") : Token {
         consumeToken()
         if (currentToken.type == TokenType.END) {
             abort("Expected $expected, got ${currentToken.valueToString()}. ($currentToken)")
@@ -523,9 +551,17 @@ class Generator(val lexer: Lexer, val libIF: LibIF, val emitter: Emitter) {
                 TokenType.ARRAY -> handleArrayToken()
                 TokenType.COLON -> handleColonToken()
                 TokenType.STRING_TOKEN -> handleStringToken()
-                TokenType.END -> continue@loop
+                TokenType.END -> {
+                    if (!lexerStack.empty()) {
+                        lexer = lexerStack.pop()
+                        token = StringLiteralToken("###continue###", -1, -1)
+                    }
+                }
+                TokenType.IMPORT -> handleImportToken()
                 else -> abort("Invalid token ${token.valueToString()}. Expected var, string, array or function definition.")
             }
+
+
         } while (token.type != TokenType.END)
 
         if (!dictionary.containsKey(entryPoint))

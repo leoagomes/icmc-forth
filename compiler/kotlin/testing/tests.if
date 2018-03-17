@@ -1,0 +1,42 @@
+entry tests
+
+#import "if-tests.if"
+
+: test-operations
+	4 dup +
+	2 /
+	3 *
+	5 -
+	7 = ;
+
+: test-branching-f 
+	false if false else true then ;
+
+: test-branching-t 
+	true if true else false then ;
+	
+: test-begin-until-leave 
+	begin
+		true if
+			true
+			leave
+		then
+		false
+	true until ;
+
+: test-do-loop-leave 
+	1 0 do
+		true
+		leave
+		drop
+		false
+	loop ;
+
+: tests
+	begin-test
+		@ test-operations
+		@ test-branching-f
+		@ test-branching-t
+		@ test-begin-until-leave
+		@ test-do-loop-leave
+	until-test ;

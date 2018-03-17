@@ -1,9 +1,10 @@
 import java.io.FileInputStream
 import java.io.InputStreamReader
 
-class LexerAbortedException(override var message: String) : Exception(message)
+class LexerAbortedException(var lexer: Lexer, override var message: String) :
+        Exception("${lexer.inputFile}:${lexer.line}:${lexer.col}: $message")
 
-class Lexer(inputFile: String) {
+class Lexer(val inputFile: String) {
     private var fileStream : FileInputStream = FileInputStream(inputFile)
     private var reader : InputStreamReader = InputStreamReader(fileStream)
 
@@ -12,7 +13,7 @@ class Lexer(inputFile: String) {
     var col : Int = 0
     var codePointsRead : Int = 0
 
-    val isTerminated : Boolean
+    private val isTerminated : Boolean
         get() = currentCodePoint == -1
 
     init {
@@ -31,7 +32,7 @@ class Lexer(inputFile: String) {
     }
 
     private fun abort(reason: String) {
-        throw LexerAbortedException(reason)
+        throw LexerAbortedException(this, reason)
     }
 
     private fun match(cp: Int) {
@@ -143,13 +144,14 @@ class Lexer(inputFile: String) {
         return when (value) {
             ":" -> ColonToken(cline, ccol)
             ";" -> SemiColonToken(cline, ccol)
-            "quote" -> QuoteToken(cline, ccol)
+            "@" -> QuoteToken(cline, ccol)
             "var" -> VarToken(cline, ccol)
-            "entry" -> EntrypointToken(cline, ccol)
+            "entry" -> EntryPointToken(cline, ccol)
             "string" -> StringToken(cline, ccol)
             "array" -> ArrayToken(cline, ccol)
             "{" -> OpenCurlyToken(cline, ccol)
             "}" -> CloseCurlyToken(cline, ccol)
+            "#import" -> ImportToken(cline, ccol)
             else -> WordToken(value, cline, ccol)
         }
     }

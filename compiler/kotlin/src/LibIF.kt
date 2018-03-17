@@ -16,7 +16,7 @@ class Module(val name: String) {
     var symbols : MutableList<Symbol> = mutableListOf()
 }
 
-class LibIF(val directory: String) {
+class LibIF(private val directory: String) {
     var modules : MutableMap<String, Module> = mutableMapOf()
 
     fun loadModules() {
@@ -34,7 +34,7 @@ class LibIF(val directory: String) {
             val moduleFile: File? = insideFiles.first { f -> f.name == "module.xml" }
 
             if (moduleFile != null)
-                loadModule(moduleFile, file)
+                loadModule(moduleFile)
         } catch (e: NoSuchElementException) {
         }
 
@@ -42,7 +42,7 @@ class LibIF(val directory: String) {
             recursiveLoadModules(child)
     }
 
-    private fun loadModule(moduleFile: File, parent: File) {
+    private fun loadModule(moduleFile: File) {
         val dbFactory = DocumentBuilderFactory.newInstance()
         val dBuilder = dbFactory.newDocumentBuilder()
         val doc = dBuilder.parse(moduleFile)

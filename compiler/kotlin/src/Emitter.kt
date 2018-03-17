@@ -1,6 +1,6 @@
 import java.io.*
 
-class Emitter(outFilePath: String, val libIF: LibIF){
+class Emitter(outFilePath: String, private val libIF: LibIF){
     private var outputFile : FileOutputStream = FileOutputStream(outFilePath)
 
     var variableList : MutableMap<String, Int> = mutableMapOf()
@@ -12,12 +12,11 @@ class Emitter(outFilePath: String, val libIF: LibIF){
 
 
     private fun escapeString(text: String) : String {
-        var str = text
-        str.replace("\n", "\\n")
-        str.replace("\"", "\\\"")
-        str.replace("\\", "\\\\")
+        text.replace("\n", "\\n")
+        text.replace("\"", "\\\"")
+        text.replace("\\", "\\\\")
 
-        return str
+        return text
     }
 
     private fun hashString(str: String) : Long {
@@ -41,13 +40,14 @@ class Emitter(outFilePath: String, val libIF: LibIF){
             return strName
 
         return if (!stringList.containsValue(escaped)) {
-            stringList.put(strName, escaped)
+            stringList[strName] = escaped
             strName
         } else {
             stringList.filter { entry -> entry.value == content }.keys.first()
         }
     }
-    fun hasStringLiteral(literal: String) : Boolean {
+
+    private fun hasStringLiteral(literal: String) : Boolean {
         val hashed = hashString(literal)
         val strName = "STRL_$hashed"
 
@@ -56,6 +56,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
 
         return stringList.containsValue(escapeString(literal))
     }
+
     fun getNameForStringLiteral(literal: String) : String? {
         if (!hasStringLiteral(literal))
             return null
@@ -64,6 +65,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
 
         return stringList.filter { it.value == escaped }.keys.first()
     }
+
     fun addRootDependency(module: String, name: String) {
         val matching = rootDependencies.filter { p -> p.first == module && p.second == name }
 
@@ -100,7 +102,7 @@ class Emitter(outFilePath: String, val libIF: LibIF){
         }
     }
 
-    fun emitChunk(chunk: String) {
+    private fun emitChunk(chunk: String) {
         outputFile.write(chunk.toByteArray())
     }
 
