@@ -1,0 +1,21 @@
+: eot-fn
+	$halt$ ;
+
+: begin-test
+	@ eot-fn ;
+
+: until-test
+	0 >r
+	begin
+		execute
+
+		"Test " stype r@ .
+		if
+			": OK"
+		else
+			": FAIL"
+		then
+		stype cr
+
+		r> 1 + >r
+	false until ;

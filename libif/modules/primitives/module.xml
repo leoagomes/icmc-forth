@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<module>
+    <name>primitives</name>
+
+    <symbols>
+        <symbol type="variable">
+            <name>FT_CONSOLE_CURSOR_POS</name>
+            <word>%console_cursor_pos%</word>
+            <vars>
+                <var name="FT_CONSOLE_CURSOR_POS" size="1"/>
+            </vars>
+        </symbol>
+        <symbol type="variable">
+            <name>FT_CONSOLE_COLOR</name>
+            <word>%console_color%</word>
+            <vars>
+                <var name="FT_CONSOLE_COLOR" size="1"/>
+            </vars>
+        </symbol>
+
+        <symbol type="function" use="pure">
+            <name>prim_printstr</name>
+            <word>$printstr$</word>
+            <snippet src="prim_printstr.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+                <dep module="primitives" name="FT_CONSOLE_COLOR" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function" use="pure">
+            <name>prim_printno</name>
+            <word>$printno$</word>
+            <snippet src="prim_printno.s"/>
+            <deps>
+                <dep module="primitives" name="prim_printstr" type="function"/>
+            </deps>
+            <vars>
+                <var name="FT_NUMSTR_BUFFER" size="5" declare="no"/>
+                <var name="FT_NUMSTR_BUFFER_END" size="2" declare="no"/>
+            </vars>
+        </symbol>
+        <symbol type="function">
+            <name>prim_clearline</name>
+            <word>$clearline$</word>
+            <snippet src="prim_clearline.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>prim_clearscreen</name>
+            <word>$clearscreen$</word>
+            <snippet src="prim_clearscreen.s"/>
+        </symbol>
+        <symbol type="function">
+            <name>prim_cr</name>
+            <word>$cr$</word>
+            <snippet src="prim_cr.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>prim_resetcursor</name>
+            <word>$resetcursor$</word>
+            <snippet src="prim_resetcursor.s"/>
+            <deps>
+                <dep module="primitives" name="FT_CONSOLE_CURSOR_POS" type="variable"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>prim_halt</name>
+            <word>$halt$</word>
+            <snippet src="prim_halt.s"/>
+        </symbol>
+    </symbols>
+</module>

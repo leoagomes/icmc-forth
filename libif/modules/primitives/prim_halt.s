@@ -1,0 +1,2 @@
+prim_halt:
+    halt

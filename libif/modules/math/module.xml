@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<module>
+    <name>math</name>
+
+    <symbols>
+        <symbol type="function">
+            <name>ft_add</name>
+            <word>+</word>
+            <snippet src="ft_add.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_sub</name>
+            <word>-</word>
+            <snippet src="ft_sub.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_mul</name>
+            <word>*</word>
+            <snippet src="ft_mul.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_div</name>
+            <word>/</word>
+            <snippet src="ft_div.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_mod</name>
+            <word>%</word>
+            <snippet src="ft_mod.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+    </symbols>
+</module>

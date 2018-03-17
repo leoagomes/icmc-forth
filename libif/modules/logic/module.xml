@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<module>
+    <name>logic</name>
+
+    <symbols>
+        <symbol type="function">
+            <name>ft_and</name>
+            <word>and</word>
+            <snippet src="ft_and.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_or</name>
+            <word>or</word>
+            <snippet src="ft_or.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_equals</name>
+            <word>=</word>
+            <snippet src="ft_equals.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_lower</name>
+            <word>&lt;</word>
+            <snippet src="ft_lower.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_greater</name>
+            <word>&gt;</word>
+            <snippet src="ft_greater.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_iszero</name>
+            <word>=0</word>
+            <snippet src="ft_iszero.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_dupz</name>
+            <word>?dup</word>
+            <snippet src="ft_dupz.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+            </deps>
+        </symbol>
+        <symbol type="function">
+            <name>ft_not</name>
+            <word>not</word>
+            <snippet src="ft_not.s"/>
+            <deps>
+                <dep module="core" name="ft_ds_push" type="function"/>
+                <dep module="core" name="ft_ds_pop" type="function"/>
+            </deps>
+        </symbol>
+    </symbols>
+</module>
